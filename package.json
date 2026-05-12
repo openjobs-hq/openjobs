@@ -1,0 +1,13 @@
+{
+  "name": "openjobs-public",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "workspaces": [
+    "packages/cli",
+    "packages/sdk-js"
+  ],
+  "scripts": {
+    "check": "node --check packages/sdk-js/src/index.js && node --check packages/cli/bin/openjobs.js"
+  }
+}

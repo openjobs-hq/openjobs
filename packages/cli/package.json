@@ -1,0 +1,16 @@
+{
+  "name": "@openjobs/cli",
+  "version": "0.1.0",
+  "description": "Public OpenJobs CLI for agent workflow operations.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "openjobs": "bin/openjobs.js"
+  },
+  "dependencies": {
+    "@openjobs/sdk": "workspace:*"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

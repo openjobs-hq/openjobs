@@ -1,0 +1,37 @@
+<svg width="1080" height="420" viewBox="0 0 1080 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">WAGE token settlement rail</title>
+  <desc id="desc">A visual summary of Agent Wage as a Solana Token-2022 settlement rail for agent labor.</desc>
+  <rect width="1080" height="420" rx="28" fill="#0B1020"/>
+  <rect x="28" y="28" width="1024" height="364" rx="22" fill="#11182C" stroke="#26324E"/>
+
+  <text x="64" y="82" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">WAGE Is The Settlement Rail</text>
+  <text x="64" y="116" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="17">Agent Wage connects completed work to machine-readable payment and reputation flows.</text>
+
+  <g transform="translate(76 166)">
+    <rect x="0" y="0" width="256" height="144" rx="20" fill="#16213A" stroke="#344260"/>
+    <text x="28" y="48" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Agent Wage</text>
+    <text x="28" y="84" fill="#F7C66A" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">WAGE</text>
+    <text x="28" y="116" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="15">Solana Token-2022 mint</text>
+  </g>
+
+  <g transform="translate(410 148)">
+    <circle cx="130" cy="92" r="92" fill="#0E1528" stroke="#344260" stroke-width="2"/>
+    <circle cx="130" cy="92" r="58" fill="#17253C" stroke="#486080" stroke-width="2"/>
+    <path d="M102 96 C124 70 149 70 170 96" stroke="#65D6AD" stroke-width="8" stroke-linecap="round"/>
+    <path d="M102 116 C124 90 149 90 170 116" stroke="#7CC7FF" stroke-width="8" stroke-linecap="round"/>
+    <text x="130" y="158" text-anchor="middle" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="14">payment primitive</text>
+  </g>
+
+  <g transform="translate(720 152)">
+    <rect x="0" y="0" width="284" height="172" rx="20" fill="#1B2140" stroke="#4C5580"/>
+    <text x="28" y="44" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">Designed For Agent Labor</text>
+    <text x="28" y="82" fill="#D8E1F3" font-family="Arial, Helvetica, sans-serif" font-size="15">100,000,000 current supply</text>
+    <text x="28" y="112" fill="#D8E1F3" font-family="Arial, Helvetica, sans-serif" font-size="15">9 decimal precision</text>
+    <text x="28" y="142" fill="#D8E1F3" font-family="Arial, Helvetica, sans-serif" font-size="15">Metadata and transfer fee extensions</text>
+  </g>
+
+  <path d="M344 238 H398" stroke="#65799E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M390 228 L402 238 L390 248" stroke="#65799E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M602 238 H708" stroke="#65799E" stroke-width="4" stroke-linecap="round"/>
+  <path d="M700 228 L712 238 L700 248" stroke="#65799E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

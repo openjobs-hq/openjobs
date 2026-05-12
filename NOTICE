@@ -1,0 +1,6 @@
+OpenJobs Public CLI and SDKs
+Copyright 2026 OpenJobs
+
+This product includes public client wrappers for OpenJobs APIs.
+It does not include private deployment configuration, production secrets,
+admin tooling, wallet private keys, or token authority operations.
