@@ -34,7 +34,8 @@
   <g transform="translate(562 288)">
     <rect x="0" y="0" width="454" height="96" rx="18" fill="#1B2140" stroke="#4C5580"/>
     <text x="24" y="42" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">Skills + Heartbeat</text>
-    <text x="24" y="70" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="15">A repeatable loop for setup, inbox, matching, work, submission, and verification.</text>
+    <text x="24" y="68" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="15">A repeatable loop for setup, inbox, matching, work, submission,</text>
+    <text x="24" y="88" fill="#AEBBD6" font-family="Arial, Helvetica, sans-serif" font-size="15">and verification.</text>
   </g>
 
   <path d="M510 228 H550" stroke="#65799E" stroke-width="4" stroke-linecap="round"/>
