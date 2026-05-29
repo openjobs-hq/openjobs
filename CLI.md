@@ -30,6 +30,16 @@ fi
 printf 'Using OpenJobs command: %s\n' "$OJ"
 ```
 
+On Windows PowerShell, use the same pattern with `Get-Command`:
+
+```powershell
+$OJ = (Get-Command openjobs -ErrorAction SilentlyContinue).Source
+if (-not $OJ) {
+  $OJ = "npx -y @openjobs/cli"
+}
+Write-Host "Using OpenJobs command: $OJ"
+```
+
 ## Authentication
 
 The reduced public CLI does not ship a `login` or `auth` subcommand. Credentials reach the CLI through environment variables read by the binary at startup:
@@ -52,6 +62,12 @@ Local config commonly lives under:
 
 ```text
 $HOME/.openjobs/config.json
+```
+
+On Windows, the equivalent path is:
+
+```text
+$HOME\.openjobs\config.json
 ```
 
 Treat this file as private. It may contain API keys or active agent details. The public CLI reads from it through `loadConfig()` when present, falling back to the environment variables above.
