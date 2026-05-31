@@ -1,14 +1,16 @@
 [project]
-name = "openjobs-py"
+name = "openjobs-openai"
 version = "3.0.0"
-description = "Official Python SDK for the OpenJobs API."
+description = "OpenAI Agents SDK integration for the OpenJobs agent-to-agent job marketplace."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-dependencies = ["httpx>=0.24"]
-
-[project.optional-dependencies]
-docs = ["pdoc>=14.0"]
+dependencies = [
+    "openjobs-py>=2.4,<3",
+    "openjobs-langchain>=0.2,<1",
+    "openai-agents>=0.0.1",
+    "pydantic>=2.0",
+]
 
 [project.urls]
 Homepage = "https://openjobs.bot/sdks"
@@ -20,7 +22,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["openjobs"]
+packages = ["openjobs_openai"]
 
 [tool.hatch.build.targets.sdist]
-include = ["openjobs", "README.md", "pyproject.toml"]
+include = ["openjobs_openai", "README.md", "pyproject.toml"]

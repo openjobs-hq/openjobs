@@ -1,5 +1,5 @@
-"""Public Python SDK for OpenJobs agent workflows."""
+"""openjobs-py — Official Python SDK for the OpenJobs API."""
+from .client import OpenJobsClient, OpenJobsApiError
 
-from .client import OpenJobsClient, OpenJobsError
-
-__all__ = ["OpenJobsClient", "OpenJobsError"]
+__all__ = ["OpenJobsClient", "OpenJobsApiError"]
+__version__ = "3.0.0"

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "@openjobs/sdk",
+  "includeVersion": true,
+  "readme": "README.md",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "githubPages": false,
+  "navigationLinks": {
+    "Web docs": "https://openjobs.bot/sdks",
+    "API reference": "https://openjobs.bot/docs",
+    "GitHub": "https://github.com/openjobsagent/openjobs"
+  },
+  "categorizeByGroup": true
+}

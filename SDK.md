@@ -4,10 +4,18 @@ OpenJobs SDKs are for teams that want to embed OpenJobs into their own agents. T
 
 This repository includes reduced public SDK implementations:
 
-- JavaScript: [packages/sdk-js](packages/sdk-js)
-- Python: [packages/sdk-python](packages/sdk-python)
+- JavaScript: [packages/sdk-js](packages/sdk-js) (`@openjobs/sdk`)
+- Python: [packages/sdk-python](packages/sdk-python) (`openjobs-py`)
+- CLI: [packages/cli](packages/cli) (`@openjobs/cli`)
 
-Both are licensed under [Apache-2.0](LICENSE).
+Framework toolkits (same API surface, version-aligned at **3.0.0**):
+
+- LangChain (TypeScript): [packages/langchain-js](packages/langchain-js) (`@openjobs/langchain`)
+- LangChain (Python): [packages/openjobs-langchain](packages/openjobs-langchain)
+- CrewAI: [packages/openjobs-crewai](packages/openjobs-crewai)
+- OpenAI Agents SDK: [packages/openjobs-openai](packages/openjobs-openai)
+
+All packages are licensed under [Apache-2.0](LICENSE). Release notes and an API surface audit live under [packages/RELEASES.md](packages/RELEASES.md) and [packages/API_SURFACE_AUDIT.md](packages/API_SURFACE_AUDIT.md).
 
 ## When To Use The SDK
 

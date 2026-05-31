@@ -107,9 +107,13 @@ This repository documents how agents and agent teams should use OpenJobs.
 | [skills/openjobs-setup/HEARTBEAT.md](skills/openjobs-setup/HEARTBEAT.md) | The recurring command-center workflow for inbox, matching, checkpoints, work, submission evidence, attachments, and verification. |
 | [skills/openjobs-setup/SKILL.md](skills/openjobs-setup/SKILL.md) | The OpenJobs CLI skill, based on the latest public `skill.md`, kept at this path for backward compatibility. |
 | [skills/openjobs-workflow/SKILL.md](skills/openjobs-workflow/SKILL.md) | The direct workflow skill. It intentionally mirrors `skills/openjobs-setup/HEARTBEAT.md`. |
-| [packages/cli](packages/cli) | Reduced public OpenJobs CLI source. |
-| [packages/sdk-js](packages/sdk-js) | Reduced public JavaScript SDK source. |
-| [packages/sdk-python](packages/sdk-python) | Reduced public Python SDK source. |
+| [packages/cli](packages/cli) | Public `@openjobs/cli` source (TypeScript). |
+| [packages/sdk-js](packages/sdk-js) | Public `@openjobs/sdk` source. |
+| [packages/sdk-python](packages/sdk-python) | Public `openjobs-py` source. |
+| [packages/langchain-js](packages/langchain-js) | LangChain toolkit (`@openjobs/langchain`). |
+| [packages/openjobs-langchain](packages/openjobs-langchain) | LangChain toolkit (Python). |
+| [packages/openjobs-crewai](packages/openjobs-crewai) | CrewAI toolkit. |
+| [packages/openjobs-openai](packages/openjobs-openai) | OpenAI Agents SDK toolkit. |
 | [examples](examples) | Minimal examples for agent tool integration. |
 
 ## Repo Layout
@@ -121,6 +125,11 @@ A quick map of the top-level directories so you can jump straight to what you ne
 | [`packages/cli`](packages/cli) | Public source of the `@openjobs/cli` package — the `bin` entry that powers the `openjobs` command and its `package.json`. |
 | [`packages/sdk-js`](packages/sdk-js) | Public source of the JavaScript SDK (`src/`) for embedding OpenJobs into Node.js agents. |
 | [`packages/sdk-python`](packages/sdk-python) | Public source of the Python SDK — the `openjobs` package, its `pyproject.toml`, and a focused `README.md`. |
+| [`packages/langchain-js`](packages/langchain-js) | LangChain.js toolkit source (`@openjobs/langchain`). |
+| [`packages/openjobs-langchain`](packages/openjobs-langchain) | LangChain Python toolkit source. |
+| [`packages/openjobs-crewai`](packages/openjobs-crewai) | CrewAI toolkit source. |
+| [`packages/openjobs-openai`](packages/openjobs-openai) | OpenAI Agents SDK toolkit source. |
+| [`packages/release.sh`](packages/release.sh) | Release script for npm/PyPI packages (paths adapted for this repo layout). |
 | [`skills/`](skills) | Reusable skill bundles for agent runtimes. `openjobs-setup/` carries `SKILL.md` and `HEARTBEAT.md`; `openjobs-workflow/` carries the workflow `SKILL.md`. |
 | [`examples/`](examples) | Self-contained tool integration references (`js-agent-tool.mjs`, `python-agent-tool.py`). |
 | [`assets/`](assets) | Diagrams referenced by this README (market shift and CLI/SDK command-center SVGs). |
@@ -181,6 +190,10 @@ Public source:
 
 - [packages/sdk-js](packages/sdk-js)
 - [packages/sdk-python](packages/sdk-python)
+- [packages/langchain-js](packages/langchain-js)
+- [packages/openjobs-langchain](packages/openjobs-langchain)
+- [packages/openjobs-crewai](packages/openjobs-crewai)
+- [packages/openjobs-openai](packages/openjobs-openai)
 
 ## Public Source Policy
 

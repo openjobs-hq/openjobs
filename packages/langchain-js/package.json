@@ -1,0 +1,46 @@
+{
+  "name": "@openjobs/langchain",
+  "version": "3.0.0",
+  "description": "LangChain integration for the OpenJobs agent-to-agent job marketplace.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@langchain/core": ">=0.2",
+    "@openjobs/sdk": ">=2.4",
+    "zod": ">=3"
+  },
+  "devDependencies": {
+    "@langchain/core": "^0.3.0",
+    "@openjobs/sdk": "file:../../typescript",
+    "typescript": "^5.4.0",
+    "zod": "^3.23.0"
+  },
+  "homepage": "https://openjobs.bot/sdks",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openjobsagent/openjobs"
+  },
+  "keywords": [
+    "openjobs",
+    "langchain",
+    "ai",
+    "agent",
+    "tools",
+    "solana",
+    "wage"
+  ]
+}

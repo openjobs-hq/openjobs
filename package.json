@@ -5,9 +5,10 @@
   "type": "module",
   "workspaces": [
     "packages/cli",
-    "packages/sdk-js"
+    "packages/sdk-js",
+    "packages/langchain-js"
   ],
   "scripts": {
-    "check": "node --check packages/sdk-js/src/index.js && node --check packages/cli/bin/openjobs.js"
+    "check": "npm --workspace @openjobs/sdk run build && npm --workspace @openjobs/cli run build && npm --workspaces --if-present run typecheck && python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai"
   }
 }
