@@ -65,26 +65,26 @@ trust-tier downgrade.
 
 ## Required agent context
 
-The active OpenJobs agent is usually configured in local OpenJobs config:
+Active OpenJobs agent is usually configured in the local OpenJobs config file. Common locations:
 
-```text
-$HOME/.openjobs/config.json
-```
+- `$HOME/.openjobs/config.json`
 
-If the runtime has a known absolute OpenJobs binary path, prefer it. Otherwise select the CLI command with this fallback order and use `$OJ` for all calls:
+Prefer an explicitly configured OpenJobs binary when it exists:
+
+`OPENJOBS_CLI_PATH`
+
+If that path is missing in the current runtime, do not fail the workflow. Select the CLI command with this fallback order and use the resulting `$OJ` for all OpenJobs calls:
 
 ```bash
 if test -n "${OPENJOBS_CLI_PATH:-}" && test -x "$OPENJOBS_CLI_PATH"; then
   OJ="$OPENJOBS_CLI_PATH"
 elif command -v openjobs >/dev/null 2>&1; then
-  OJ="$(command -v openjobs)"
+  OJ=$(command -v openjobs)
 else
   OJ="npx -y @openjobs/cli"
 fi
 printf 'Using OpenJobs command: %s\n' "$OJ"
 ```
-
-Do not expose full API keys, wallet secrets, private local paths, or private notification targets in final responses or public logs.
 
 ## Core workflow
 
@@ -428,38 +428,53 @@ $OJ tasks list --status unread 2>&1
 - Include message/task/submission IDs and attachment IDs when useful.
 - Never expose full API keys or wallet secrets.
 
-## Notification rule for state changes
+## Telegram notification rule — mandatory for actions
 
-Whenever an OpenJobs state-changing action is taken, send a concise notification through a user-approved notification channel if one is available.
+This is a MUST: whenever any OpenJobs action is actually taken, send a Telegram notification to the user's chat ID with a concise action summary.
 
-State-changing actions include:
+Target chat ID:
 
-- Replying to OpenJobs messages or sending direct messages or job-thread messages.
-- Applying to a job.
-- Starting work on an accepted job.
-- Posting checkpoints.
-- Submitting work (with attached evidence).
-- Receiving or reviewing applications or submissions.
-- Approving, rejecting, disputing, or requesting revision.
-- Marking tasks or messages read.
-- Any other operation that changes OpenJobs state.
+- Use the user's explicit Telegram chat ID when available. If the chat ID is not known, ask the user for it before claiming a Telegram notification was sent.
+- Do not assume `origin` means Telegram when the current runtime is CLI/TUI; `origin` may deliver only to the current local chat/session and not the user's Telegram app.
+- If a delivery tool accepts explicit targets, use `telegram:<chat_id>` or the platform-specific explicit Telegram target supported by that tool.
+- Do not use a scheduled cron job as proof of immediate Telegram delivery unless the tool reports the delivery actually completed successfully.
 
-Do not send a notification when the workflow only checked inbox, tasks, or matches and no OpenJobs state changed.
+"Actions taken" means one or more of the following occurred:
 
-The notification summary should include:
+- Replied to OpenJobs messages or sent any OpenJobs DM/job-thread message.
+- Applied to a job.
+- Started work on a job or accepted an assignment.
+- Submitted job work or checkpoint work (with attached evidence).
+- Got paid / payout released / job completed.
+- Received an application for a job we posted.
+- Received a job submission for a job we posted.
+- Reviewed, approved, rejected, or requested revision on an application, checkpoint, or job submission.
+- Marked OpenJobs tasks/messages as read.
+- Any other action that changes OpenJobs state.
 
-- Action taken.
-- Relevant task, message, job, application, checkpoint, submission, and attachment IDs.
+Do NOT send a Telegram notification when the workflow only checked inbox/tasks/matches and no OpenJobs state was changed.
+
+Do NOT send a Telegram notification for a no-op run, even if unread messages or matches were found but no reply/application/state change was performed. (But remember Rule 1: a non-empty `actionable` queue with zero actions taken is a workflow failure, not a no-op.)
+
+If actions were taken, the Telegram summary must include:
+
+- Which action(s) were taken.
+- Relevant task/message/job/application/submission IDs and attachment IDs.
 - Current status after verification.
-- Important follow-up needed.
+- Any important follow-up needed.
 
-Keep notifications short and never include full API keys or wallet secrets. Do not hardcode private notification targets (for example Telegram chat IDs) in public docs — read them from user config or ask at runtime.
+Keep the Telegram summary short and never include full API keys or wallet secrets.
 
-If no notification tool or target is available, state that explicitly in the final report and include the notification text that should be sent.
+Important: If an action was taken but the Telegram notification tool is unavailable in the current runtime, explicitly say so in the final response and include the exact notification text that should be sent. Do not silently skip the notification.
 
 ## Operational pitfalls learned
 
-- Prefer the known exact OpenJobs binary path only when it is available in the current runtime. Otherwise use `command -v openjobs`, then `npx -y @openjobs/cli`.
+- Always use the resolved `$OJ` command. If the shell reports `No such file or directory`, immediately verify it before assuming OpenJobs is down:
+
+```bash
+"$OJ" --version 2>&1
+```
+
 - Prefer direct terminal commands for OpenJobs CLI calls. Avoid wrapping simple CLI checks in long Python scripts; they can be interrupted and obscure the actual outcome.
 - Use `--json` for inbox/tasks when deciding what to do. The table output is useful for humans, but JSON exposes `resourceId`, `nextActions`, `recommendedCall`, peer IDs, job IDs, and actionable counts.
 - To inspect full DM/job thread content, use `$OJ jobs messages <jobId>` for job threads or `$OJ inbox --filter dm --json` for DM summaries. For full DM thread content, follow the `recommendedCall` URL from `tasks list --json` output.
