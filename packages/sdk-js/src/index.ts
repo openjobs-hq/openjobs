@@ -160,7 +160,7 @@ export class OpenJobsClient {
   readonly webhooks: WebhooksApi;
   /** Sandbox-only helpers (status + tWAGE faucet). See {@link SandboxApi}. */
   readonly sandbox: SandboxApi;
-  /** WAGE / USDC ledger balances + on-chain deposit verification. See {@link WalletApi}. */
+  /** WAGE / USDC ledger balances + sponsored/manual deposit flows. See {@link WalletApi}. */
   readonly wallet: WalletApi;
   /** On-chain withdrawals (WAGE or USDC). See {@link PayoutsApi}. */
   readonly payouts: PayoutsApi;
@@ -232,7 +232,7 @@ export class OpenJobsClient {
     }
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      "user-agent": "openjobs-sdk-ts/3.0.0",
+      "user-agent": "openjobs-sdk-ts/3.0.1",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
     if (this.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
@@ -310,7 +310,7 @@ export class OpenJobsClient {
       this.options.baseUrl,
     );
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.0",
+      "user-agent": "openjobs-sdk-ts/3.0.1",
       "accept": "application/json",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
@@ -1120,7 +1120,7 @@ export class AttachmentsApi {
   /** Download metadata/binary response through the configured fetch. */
   async download(attachmentId: string): Promise<Blob> {
     const url = new URL(`/api/attachments/${encodeURIComponent(attachmentId)}/download`, this.c.options.baseUrl);
-    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.0.0" };
+    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.0.1" };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
     if (this.c.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
     const res = await this.c.options.fetch(url.toString(), { method: "GET", headers });
@@ -1172,7 +1172,7 @@ export class EventsApi {
   async stream(): Promise<Response> {
     const url = new URL("/api/events/stream", this.c.options.baseUrl);
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.0",
+      "user-agent": "openjobs-sdk-ts/3.0.1",
       "accept": "text/event-stream",
     };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
@@ -1426,6 +1426,14 @@ export class WalletApi {
    */
   deposit(input: { txSignature: string; currency?: string }): Promise<any> {
     return this.c.request("POST", "/api/wallet/deposit", input);
+  }
+  /** Prepare a hot-wallet fee-sponsored deposit transaction for local wallet signing. */
+  prepareDeposit(input: { amount: number; currency?: string }): Promise<any> {
+    return this.c.request("POST", "/api/wallet/deposit/prepare", input);
+  }
+  /** Submit a locally signed sponsored deposit transaction and credit the ledger. */
+  submitDeposit(input: { signedTransaction: string; currency?: string }): Promise<any> {
+    return this.c.request("POST", "/api/wallet/deposit/submit", input);
   }
   /** Public treasury addresses and memo instructions for deposits. */
   treasury(): Promise<any> {

@@ -1,5 +1,24 @@
 # Changelog — openjobs-crewai
 
+## [3.0.2] — 2026-05-31
+
+### Fixed
+
+- Corrected package metadata to require `openjobs-py >=3.0.2,<4.0.0`
+  and `openjobs-langchain >=3.0.2,<4.0.0`. The published `3.0.1`
+  metadata still required pre-v3 packages.
+- Added `WalletPrepareDepositTool` and `WalletSubmitDepositTool` for
+  hot-wallet fee-sponsored deposit flows. `WalletDepositTool` remains
+  the manual transaction-signature verification fallback.
+
+## [3.0.1] — 2026-05-31
+
+### Changed
+
+- **Documentation updates.** Refreshed and corrected toolkit
+  documentation. No code or API changes — this is a docs-only patch
+  release.
+
 ## [3.0.0] — 2026-05-31
 
 ### Changed

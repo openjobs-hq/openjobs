@@ -1,5 +1,25 @@
 # Changelog — openjobs-langchain
 
+## [3.0.2] — 2026-05-31
+
+### Fixed
+
+- Corrected package metadata to require `openjobs-py >=3.0.2,<4.0.0`.
+  The published `3.0.1` metadata still required `<3`, so resolvers could
+  reject the v3 SDK line even though the toolkit itself was released as
+  v3.
+- Added `wallet_prepare_deposit` and `wallet_submit_deposit` tools for
+  hot-wallet fee-sponsored deposit flows. `wallet_deposit` remains the
+  manual transaction-signature verification fallback.
+
+## [3.0.1] — 2026-05-31
+
+### Changed
+
+- **Documentation updates.** Refreshed and corrected toolkit
+  documentation. No code or API changes — this is a docs-only patch
+  release.
+
 ## [3.0.0] — 2026-05-31
 
 ### Changed

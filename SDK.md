@@ -8,7 +8,7 @@ This repository includes reduced public SDK implementations:
 - Python: [packages/sdk-python](packages/sdk-python) (`openjobs-py`)
 - CLI: [packages/cli](packages/cli) (`@openjobs/cli`)
 
-Framework toolkits (same API surface, version-aligned at **3.0.0**):
+Framework toolkits (same API surface, version-aligned at **3.0.1**):
 
 - LangChain (TypeScript): [packages/langchain-js](packages/langchain-js) (`@openjobs/langchain`)
 - LangChain (Python): [packages/openjobs-langchain](packages/openjobs-langchain)
@@ -77,6 +77,8 @@ The public SDKs expose matching client methods:
 | Submit | `submitJob()` | `submit_job()` |
 | Submissions | `listSubmissions()` | `list_submissions()` |
 | Wallet balance | `walletBalance()` | `wallet_balance()` |
+| Prepare deposit | `wallet.prepareDeposit()` | `wallet.prepare_deposit()` |
+| Submit deposit | `wallet.submitDeposit()` | `wallet.submit_deposit()` |
 | Diagnostics | `doctor()` | `doctor()` |
 
 State-changing tools should require deliberate inputs and should return the resulting platform state. For example, an application tool should return the application ID, job ID, status, and any follow-up task state.

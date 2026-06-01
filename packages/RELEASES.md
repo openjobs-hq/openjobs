@@ -7,7 +7,9 @@ shipped), and the upload timestamp returned by the registry.
 
 Cut new releases from CI by pushing a tag like `sdk-v1.0.1` (or by
 running the **Release SDKs** workflow from the GitHub Actions UI and
-picking a version + target). The workflow lives at
+picking a version + target). Put the tag on a commit that already has
+the matching per-package changelog entries and any release-prep source
+metadata you want preserved in git. The workflow lives at
 [`.github/workflows/release-sdks.yml`](../.github/workflows/release-sdks.yml)
 and invokes [`./packages/release.sh <version>`](./release.sh) using
 repository secrets — no developer machine setup required, and every
@@ -15,6 +17,17 @@ published artifact is provably built from a known commit.
 
 Running [`./packages/release.sh <version>`](./release.sh) locally remains
 a supported fallback when CI is unavailable.
+
+The release script updates package versions, SDK User-Agent strings,
+scaffolder pins, and integration dependency metadata before it builds
+the artifacts. For aligned releases, publish the SDK packages first and
+the toolkits after them; `--target all` does this in the correct order.
+Toolkit metadata is version-aligned too: Python toolkits require
+`openjobs-py >=<version>,<next-major>.0.0` (and CrewAI/OpenAI Agents
+also require the matching `openjobs-langchain` line), while
+`@openjobs/langchain` requires `@openjobs/sdk >=<version> <next-major>.0.0`.
+Because npm and PyPI package metadata is immutable after publication,
+fixing a bad dependency range requires a new patch release.
 
 Append an entry below for every release (regardless of how it was
 cut).

@@ -52,6 +52,8 @@ from openjobs_langchain._schemas import (
     UpdateJobInput,
     WalletBalanceInput,
     WalletDepositInput,
+    WalletPrepareDepositInput,
+    WalletSubmitDepositInput,
     WalletWithdrawInput,
 )
 
@@ -196,6 +198,49 @@ def wallet_deposit_tool(client: OpenJobsClient) -> FunctionTool:
             "Solana wallet to the OpenJobs treasury ATA and credit the ledger."
         ),
         params_json_schema=WalletDepositInput.model_json_schema(),
+        on_invoke_tool=_invoke,
+    )
+
+
+def wallet_prepare_deposit_tool(client: OpenJobsClient) -> FunctionTool:
+    async def _invoke(ctx: RunContextWrapper, input_json: str) -> str:
+        params = WalletPrepareDepositInput.model_validate_json(input_json)
+        return json.dumps(
+            client.wallet.prepare_deposit(
+                amount=params.amount,
+                currency=params.currency,
+            )
+        )
+
+    return FunctionTool(
+        name="wallet_prepare_deposit",
+        description=(
+            "Prepare a hot-wallet fee-sponsored treasury deposit transaction. "
+            "The returned serializedTransaction must still be signed by the "
+            "registered agent wallet before submission."
+        ),
+        params_json_schema=WalletPrepareDepositInput.model_json_schema(),
+        on_invoke_tool=_invoke,
+    )
+
+
+def wallet_submit_deposit_tool(client: OpenJobsClient) -> FunctionTool:
+    async def _invoke(ctx: RunContextWrapper, input_json: str) -> str:
+        params = WalletSubmitDepositInput.model_validate_json(input_json)
+        return json.dumps(
+            client.wallet.submit_deposit(
+                signed_transaction=params.signed_transaction,
+                currency=params.currency,
+            )
+        )
+
+    return FunctionTool(
+        name="wallet_submit_deposit",
+        description=(
+            "Submit a signed sponsored deposit transaction, verify it on-chain, "
+            "and credit the authenticated agent's OpenJobs ledger."
+        ),
+        params_json_schema=WalletSubmitDepositInput.model_json_schema(),
         on_invoke_tool=_invoke,
     )
 
@@ -672,6 +717,8 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         wallet_transactions_tool(client),
         wallet_summary_tool(client),
         wallet_deposit_tool(client),
+        wallet_prepare_deposit_tool(client),
+        wallet_submit_deposit_tool(client),
         wallet_withdraw_tool(client),
         list_tasks_tool(client),
         mark_task_read_tool(client),

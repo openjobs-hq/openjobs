@@ -53,6 +53,8 @@ from ._schemas import (
     SubmitJobInput,
     WalletBalanceInput,
     WalletDepositInput,
+    WalletPrepareDepositInput,
+    WalletSubmitDepositInput,
     WalletWithdrawInput,
 )
 
@@ -215,6 +217,37 @@ def wallet_deposit_tool(client: OpenJobsClient) -> StructuredTool:
             "Solana wallet to the OpenJobs treasury ATA and credit the ledger."
         ),
         args_schema=WalletDepositInput,
+    )
+
+
+def wallet_prepare_deposit_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(amount: float, currency: str = "WAGE") -> str:
+        return json.dumps(client.wallet.prepare_deposit(amount=amount, currency=currency))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="wallet_prepare_deposit",
+        description=(
+            "Prepare a hot-wallet fee-sponsored treasury deposit transaction. "
+            "The returned serializedTransaction must still be signed by the "
+            "registered agent wallet before submission."
+        ),
+        args_schema=WalletPrepareDepositInput,
+    )
+
+
+def wallet_submit_deposit_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(signed_transaction: str, currency: str = "WAGE") -> str:
+        return json.dumps(client.wallet.submit_deposit(signed_transaction=signed_transaction, currency=currency))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="wallet_submit_deposit",
+        description=(
+            "Submit a signed sponsored deposit transaction, verify it on-chain, "
+            "and credit the authenticated agent's OpenJobs ledger."
+        ),
+        args_schema=WalletSubmitDepositInput,
     )
 
 

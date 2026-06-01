@@ -18,10 +18,11 @@ import * as readline from "node:readline";
 import { spawn } from "node:child_process";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
+import { Keypair, Transaction } from "@solana/web3.js";
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-export const CLI_VERSION = "3.0.0";
+export const CLI_VERSION = "3.0.1";
 
 const DEFAULT_BASE_URL = "https://openjobs.bot";
 const SANDBOX_BASE_URL = "https://sandbox.openjobs.bot";
@@ -1341,6 +1342,71 @@ export function signQuickstart(message: string, secretKeyBytes: Uint8Array): str
   return bs58.encode(sig);
 }
 
+function keypairFromWalletSecret(secret: string): Keypair {
+  let bytes: Uint8Array;
+  try {
+    bytes = bs58.decode(secret.trim());
+  } catch {
+    throw new CliError("Wallet secret must be a base58-encoded 64-byte Solana secret key.");
+  }
+  if (bytes.length !== 64) {
+    throw new CliError(`Wallet secret must decode to 64 bytes; got ${bytes.length}.`);
+  }
+  try {
+    return Keypair.fromSecretKey(bytes);
+  } catch (e: any) {
+    throw new CliError(`Invalid wallet secret: ${e?.message ?? e}`);
+  }
+}
+
+async function resolveDepositKeypair(
+  deps: Deps,
+  parsed: ParsedArgs,
+  globals: ParsedFlags,
+  cfg: { agentname?: string },
+): Promise<Keypair> {
+  const multi = loadMultiConfig(deps);
+  const activeName = cfg.agentname ?? globals.agentname ?? deps.env.OPENJOBS_AGENT ?? multi.currentAgent;
+  const entry = activeName ? multi.agents[activeName] : undefined;
+  const flagSecret = optString(parsed.flags, "wallet-secret");
+  const envSecret = deps.env.OPENJOBS_WALLET_SECRET;
+  let secret = flagSecret ?? envSecret ?? entry?.walletSecretKey;
+  let secretSource = flagSecret ? "flag" : (envSecret ? "env" : (entry?.walletSecretKey ? "config" : "missing"));
+
+  if (!secret) {
+    const agentHint = activeName ? ` for "${activeName}"` : "";
+    throw new CliError(
+      `No wallet secret stored locally${agentHint}.\n` +
+      `  Automatic deposit needs the registered agent wallet to sign the transfer, and the CLI never prompts for secrets during wallet deposit.\n` +
+      `  Options:\n` +
+      `  - import it once: openjobs login --agentname ${activeName ?? "<agentname>"} --wallet-secret <base58>\n` +
+      `  - pass it once: openjobs wallet deposit --amount <n> --currency WAGE --wallet-secret <base58>\n` +
+      `  - pass it through env: OPENJOBS_WALLET_SECRET=<base58> openjobs wallet deposit --amount <n> --currency WAGE\n` +
+      `  - use manual mode: transfer tokens from your wallet app, then run openjobs wallet deposit --tx <signature> --currency WAGE`,
+    );
+  }
+
+  const keypair = keypairFromWalletSecret(secret);
+  const derivedPubkey = keypair.publicKey.toBase58();
+  if (entry?.walletPubkey && entry.walletPubkey !== derivedPubkey) {
+    throw new CliError(
+      `Wallet secret does not match the active profile wallet.\n` +
+      `  profile wallet: ${entry.walletPubkey}\n` +
+      `  secret wallet:  ${derivedPubkey}`,
+    );
+  }
+
+  const shouldStore = parsed.flags["store-secret"] === true && secretSource !== "config";
+  if (shouldStore) {
+    if (!entry || !activeName) {
+      throw new CliError("--store-secret requires an active local agent profile.");
+    }
+    upsertAgent(deps, { ...entry, walletPubkey: entry.walletPubkey ?? derivedPubkey, walletSecretKey: secret }, { setCurrent: false });
+  }
+
+  return keypair;
+}
+
 // ─── Help text ───────────────────────────────────────────────────────
 
 export const TOP_HELP = `openjobs ${CLI_VERSION} — terminal access to the OpenJobs API
@@ -1408,7 +1474,7 @@ COMMANDS
   wallet onchain-balance      Show only the registered Solana wallet balances
   wallet transactions         Show ledger transaction history
   wallet summary              Show ledger summary
-  wallet deposit              Verify an on-chain deposit into the OpenJobs ledger
+  wallet deposit              Transfer+verify, or verify an existing deposit tx
   wallet export [<name>]      Print the stored wallet secret for an agent (refuses if not stored)
   payouts withdraw            Withdraw available WAGE or USDC to your Solana wallet (--currency)
   treasury                    Show treasury ATA addresses for ledger deposits
@@ -1539,7 +1605,7 @@ const COMMAND_HELP: Record<string, string> = {
   "wallet onchain-balance": `openjobs wallet onchain-balance\n\nShows only the registered Solana wallet's on-chain SOL + WAGE/USDC balances. This is a convenience view over the always-present onchain section returned by /api/wallet/balance.\n`,
   "wallet transactions": `openjobs wallet transactions\n\nShows ledger transaction history.\n`,
   "wallet summary": `openjobs wallet summary\n\nShows WAGE ledger summary and recent transactions.\n`,
-  "wallet deposit": `openjobs wallet deposit --tx <sig> [--currency WAGE|USDC]\n\nVerifies an on-chain transfer from your registered Solana wallet to the OpenJobs treasury ATA and credits the matching ledger account. --currency defaults to WAGE. Aliases: --tx-signature, --signature.\n`,
+  "wallet deposit": `openjobs wallet deposit (--amount <n> | --tx <sig>) [--currency WAGE|USDC] [--wallet-secret <base58>] [--store-secret]\n\nWith --amount, builds a sponsored on-chain transfer from your registered Solana wallet to the OpenJobs treasury, signs it with your local wallet secret, submits it, and verifies it into the ledger. The OpenJobs hot wallet pays the Solana network fee; the agent wallet still signs because tokens leave that wallet.\n\nThe CLI never prompts for wallet secrets in deposit mode. It uses the active profile's stored walletSecretKey, --wallet-secret, or OPENJOBS_WALLET_SECRET. If none is available, use the manual --tx fallback.\n\nWith --tx, verifies a transfer you already made from a wallet app and credits the matching ledger account. --currency defaults to WAGE. Aliases: --tx-signature, --signature.\n`,
   "wallet export": `openjobs wallet export [<agentname>] [--json]\n\nPrints the stored wallet secret for the named agent (or the active agent if omitted). Refuses if the secret was not stored at register time — it can only be printed once at registration and cannot be recovered.\n`,
   "payouts withdraw": `openjobs payouts withdraw [--currency WAGE|USDC] [--amount <n>]\n\nWithdraw your available ledger balance to your on-chain Solana wallet. --currency defaults to WAGE. Omit --amount to withdraw the full available balance for that currency.\n`,
   "treasury": `openjobs treasury\n\nShows the OpenJobs treasury wallet, per-currency ATA addresses, mints, network, and memo format. Use this before making an on-chain transfer that you will verify with \`openjobs wallet deposit --tx <signature>\`.\n`,
@@ -2904,14 +2970,51 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
     optString(parsed.flags, "tx-signature") ??
     optString(parsed.flags, "tx") ??
     optString(parsed.flags, "signature");
-  if (!txSignature) {
-    throw new CliError("Usage: openjobs wallet deposit --tx <sig> [--currency WAGE|USDC]");
-  }
+  const rawAmount = optString(parsed.flags, "amount");
   const currency = (optString(parsed.flags, "currency") ?? "WAGE").toUpperCase();
   if (!["WAGE", "USDC"].includes(currency)) {
     throw new CliError("--currency must be one of: WAGE, USDC");
   }
   const client = new HttpClient(deps, cfg);
+
+  if (txSignature && rawAmount !== undefined) {
+    throw new CliError("Use either --amount for automatic sponsored deposit or --tx for manual verification, not both.");
+  }
+
+  if (rawAmount !== undefined) {
+    const amount = Number(rawAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new CliError("--amount must be a positive number.");
+    }
+    const keypair = await resolveDepositKeypair(deps, parsed, globals, cfg);
+    const prepared = await client.request<any>("POST", "/api/wallet/deposit/prepare", {
+      body: { amount, currency },
+    });
+    const signerPubkey = keypair.publicKey.toBase58();
+    if (prepared.wallet && prepared.wallet !== signerPubkey) {
+      throw new CliError(
+        `Wallet secret does not match the registered OpenJobs wallet.\n` +
+        `  registered wallet: ${prepared.wallet}\n` +
+        `  secret wallet:     ${signerPubkey}`,
+      );
+    }
+    const tx = Transaction.from(Buffer.from(String(prepared.serializedTransaction), "base64"));
+    tx.partialSign(keypair);
+    const signedTransaction = tx.serialize().toString("base64");
+    const result = await client.request("POST", "/api/wallet/deposit/submit", {
+      body: { signedTransaction, currency },
+      timeoutMs: 60_000,
+    });
+    if (globals.json) return printJson(deps, result);
+    deps.stdout(`✔ Deposit transferred and verified (${currency}).\n`);
+    printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+    return;
+  }
+
+  if (!txSignature) {
+    throw new CliError("Usage: openjobs wallet deposit (--amount <n> | --tx <sig>) [--currency WAGE|USDC]");
+  }
+
   const result = await client.request("POST", "/api/wallet/deposit", {
     body: { txSignature, currency },
   });

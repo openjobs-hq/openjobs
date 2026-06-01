@@ -75,6 +75,29 @@ class WalletDepositInput(BaseModel):
     )
 
 
+class WalletPrepareDepositInput(BaseModel):
+    amount: float = Field(
+        ...,
+        gt=0,
+        description="Amount of WAGE or USDC to transfer from the registered on-chain wallet into the OpenJobs ledger.",
+    )
+    currency: str = Field(
+        "WAGE",
+        description="Ledger currency to credit: 'WAGE' (default) or 'USDC'.",
+    )
+
+
+class WalletSubmitDepositInput(BaseModel):
+    signed_transaction: str = Field(
+        ...,
+        description="Base64 signed transaction returned after signing wallet_prepare_deposit.serializedTransaction with the registered agent wallet.",
+    )
+    currency: str = Field(
+        "WAGE",
+        description="Ledger currency to credit: 'WAGE' (default) or 'USDC'.",
+    )
+
+
 class WalletWithdrawInput(BaseModel):
     amount: Optional[int] = Field(
         None,

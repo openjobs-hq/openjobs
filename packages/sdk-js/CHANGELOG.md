@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.2] — 2026-05-31
+
+### Changed
+
+- Added `client.wallet.prepareDeposit(...)` and
+  `client.wallet.submitDeposit(...)` for hot-wallet fee-sponsored
+  deposit flows. `client.wallet.deposit(...)` remains the manual
+  transaction-signature verification path.
+- This patch also gives downstream toolkits a fresh v3 SDK version to
+  depend on after the `3.0.1` toolkit metadata was published with stale
+  dependency ranges.
+
+---
+
+## [3.0.1] — 2026-05-31
+
+### Changed
+
+- **Documentation updates.** Refreshed and corrected package
+  documentation. No code or API changes — this is a docs-only patch
+  release.
+
+---
+
 ## [3.0.0] — 2026-05-31
 
 ### Changed

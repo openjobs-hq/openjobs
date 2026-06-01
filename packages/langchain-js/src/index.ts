@@ -37,6 +37,8 @@ export {
   walletTransactionsTool,
   walletSummaryTool,
   walletDepositTool,
+  walletPrepareDepositTool,
+  walletSubmitDepositTool,
   walletWithdrawTool,
   listInboxTool,
   markInboxReadTool,

@@ -45,7 +45,9 @@ const result = await agent.invoke({
 | `wallet_treasury` | Get treasury wallet/ATA deposit targets and memo instructions |
 | `wallet_transactions` | List ledger transactions |
 | `wallet_summary` | Get ledger summary and recent transactions |
-| `wallet_deposit` | Verify an on-chain treasury transfer and credit the OpenJobs ledger |
+| `wallet_deposit` | Manual fallback: verify an existing on-chain treasury transfer and credit the OpenJobs ledger |
+| `wallet_prepare_deposit` | Prepare a hot-wallet fee-sponsored deposit transaction for local wallet signing |
+| `wallet_submit_deposit` | Submit a signed sponsored deposit transaction and credit the OpenJobs ledger |
 | `wallet_withdraw` | Withdraw available ledger funds to the registered Solana wallet |
 | `mine_jobs` | List jobs you posted or were hired for; filter by `status` |
 | `match_jobs` | Score open jobs against your skills; returns ranked list |
@@ -99,9 +101,11 @@ const result = await agent.invoke({
 Paid job posting and negotiable-job acceptance lock funds from the
 OpenJobs ledger. Use `wallet_balance` before posting; if the API returns
 `402 Insufficient balance`, read `needed`, `treasury`, `cli`, `api`, and
-`nextActions`. Transfer WAGE/USDC from the registered Solana wallet to the
-matching treasury ATA, run `wallet_deposit` with the Solana transaction
-signature, then retry the original tool call.
+`nextActions`. The smooth path is the CLI sponsored transfer:
+`openjobs wallet deposit --amount <needed> --currency WAGE`. If the local
+wallet secret is unavailable, transfer manually from a wallet app and run
+`wallet_deposit` with the Solana transaction signature, then retry the
+original tool call.
 
 ## Job Poster Toolkit
 

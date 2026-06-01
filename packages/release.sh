@@ -80,6 +80,47 @@ bump_scaffolder_pin() {
   echo "  scaffolder pin ($const_name) → $VERSION"
 }
 
+# Keep toolkit dependency metadata aligned with the SDK release. Registry
+# package metadata is immutable once published, so a stale `<3` requirement on
+# a v3 toolkit cannot be corrected in-place after upload.
+bump_pyproject_dependency() {
+  local file="$1"
+  local package="$2"
+  local range="$3"
+  if [[ ! -f "$file" ]]; then
+    echo "❌ Cannot update dependency: $file does not exist."
+    exit 1
+  fi
+  if ! grep -q "\"${package}[<>=]" "$file"; then
+    echo "❌ ${package} dependency not found in $file — refusing to publish stale metadata."
+    exit 1
+  fi
+  sed -i.bak -E "s|\"${package}[^\"]*\"|\"${package}${range}\"|" "$file"
+  rm -f "$file.bak"
+  echo "  ${file#$SCRIPT_DIR/}: ${package}${range}"
+}
+
+bump_langchain_ts_sdk_peer() {
+  local file="$LANGCHAIN_TS_DIR/package.json"
+  local lock="$LANGCHAIN_TS_DIR/package-lock.json"
+  node - "$file" "$lock" "$NPM_ALIGNED_RANGE" <<'NODE'
+const fs = require("fs");
+const [pkgPath, lockPath, range] = process.argv.slice(2);
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+pkg.peerDependencies = pkg.peerDependencies || {};
+pkg.peerDependencies["@openjobs/sdk"] = range;
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
+  if (lock.packages && lock.packages[""] && lock.packages[""].peerDependencies) {
+    lock.packages[""].peerDependencies["@openjobs/sdk"] = range;
+  }
+  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n");
+}
+NODE
+  echo "  @openjobs/langchain peer @openjobs/sdk → $NPM_ALIGNED_RANGE"
+}
+
 VERSION=""
 TARGET="both"
 DRY_RUN=0
@@ -215,6 +256,10 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
   echo "❌ Version must be semver (e.g. 1.2.3 or 1.2.3-beta.1). Got: $VERSION"
   exit 1
 fi
+
+NEXT_MAJOR="$(node -e "const m=/^(\\d+)\\./.exec(process.argv[1]); if (!m) process.exit(1); console.log(Number(m[1]) + 1)" "$VERSION")"
+PY_ALIGNED_RANGE=">=${VERSION},<${NEXT_MAJOR}.0.0"
+NPM_ALIGNED_RANGE=">=${VERSION} <${NEXT_MAJOR}.0.0"
 
 echo ""
 echo "┌─────────────────────────────────────────────────┐"
@@ -513,6 +558,7 @@ release_langchain_py() {
   sed -i.bak -E "s/^__version__ = \"[^\"]+\"/__version__ = \"$VERSION\"/" openjobs_langchain/__init__.py
   rm -f openjobs_langchain/__init__.py.bak
   echo "  pyproject.toml + __init__.py → $VERSION"
+  bump_pyproject_dependency "$LANGCHAIN_PY_DIR/pyproject.toml" "openjobs-py" "$PY_ALIGNED_RANGE"
 
   bump_scaffolder_pin "TOOLKIT_VERSION_LANGCHAIN_PY"
 
@@ -556,6 +602,8 @@ release_crewai_py() {
   sed -i.bak -E "s/^__version__ = \"[^\"]+\"/__version__ = \"$VERSION\"/" openjobs_crewai/__init__.py
   rm -f openjobs_crewai/__init__.py.bak
   echo "  pyproject.toml + __init__.py → $VERSION"
+  bump_pyproject_dependency "$CREWAI_PY_DIR/pyproject.toml" "openjobs-py" "$PY_ALIGNED_RANGE"
+  bump_pyproject_dependency "$CREWAI_PY_DIR/pyproject.toml" "openjobs-langchain" "$PY_ALIGNED_RANGE"
 
   bump_scaffolder_pin "TOOLKIT_VERSION_CREWAI_PY"
 
@@ -599,6 +647,8 @@ release_openai_agents_py() {
   sed -i.bak -E "s/^__version__ = \"[^\"]+\"/__version__ = \"$VERSION\"/" openjobs_openai/__init__.py
   rm -f openjobs_openai/__init__.py.bak
   echo "  pyproject.toml + __init__.py → $VERSION"
+  bump_pyproject_dependency "$OPENAI_AGENTS_PY_DIR/pyproject.toml" "openjobs-py" "$PY_ALIGNED_RANGE"
+  bump_pyproject_dependency "$OPENAI_AGENTS_PY_DIR/pyproject.toml" "openjobs-langchain" "$PY_ALIGNED_RANGE"
 
   bump_scaffolder_pin "TOOLKIT_VERSION_OPENAI_AGENTS_PY"
 
@@ -644,6 +694,7 @@ release_langchain_ts() {
     fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
     console.log('  package.json → ' + pkg.version);
   "
+  bump_langchain_ts_sdk_peer
 
   bump_scaffolder_pin "TOOLKIT_VERSION_LANGCHAIN_TS"
 

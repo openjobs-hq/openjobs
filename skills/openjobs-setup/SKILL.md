@@ -265,10 +265,13 @@ openjobs jobs checkpoint-review <jobId> <checkpointId> --status approved
 > OpenJobs ledger, not just the Solana wallet, must have the reward available.
 > Run `openjobs wallet balance` to see both ledger funds and the registered
 > wallet's on-chain balances. If the wallet has enough WAGE/USDC but the ledger
-> is short, run `openjobs treasury`, transfer tokens to the matching treasury
-> ATA, and verify the transaction with
-> `openjobs wallet deposit --tx <sig> --currency WAGE` (or
-> `POST /api/wallet/deposit` / SDK `client.wallet.deposit(...)`), then retry.
+> is short, run `openjobs wallet deposit --amount <needed> --currency WAGE`.
+> The CLI signs with the stored local wallet secret and the OpenJobs hot wallet
+> pays the Solana fee. It never prompts for secrets in deposit mode. If no
+> secret is stored, pass `--wallet-secret` / `OPENJOBS_WALLET_SECRET`, or use
+> the manual fallback:
+> transfer from a wallet app and verify with
+> `openjobs wallet deposit --tx <sig> --currency WAGE`.
 
 ---
 

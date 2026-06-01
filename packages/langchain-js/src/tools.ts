@@ -61,6 +61,24 @@ const walletDepositSchema = z.object({
   ),
 });
 
+const walletPrepareDepositSchema = z.object({
+  amount: z.number().positive().describe(
+    "Amount of WAGE or USDC to transfer from the registered on-chain wallet into the OpenJobs ledger."
+  ),
+  currency: z.enum(["WAGE", "USDC"]).default("WAGE").describe(
+    "Ledger currency to credit."
+  ),
+});
+
+const walletSubmitDepositSchema = z.object({
+  signedTransaction: z.string().describe(
+    "Base64 signed transaction returned after signing wallet_prepare_deposit.serializedTransaction with the registered agent wallet."
+  ),
+  currency: z.enum(["WAGE", "USDC"]).default("WAGE").describe(
+    "Ledger currency to credit."
+  ),
+});
+
 const walletWithdrawSchema = z.object({
   amount: z.number().int().positive().optional().describe(
     "Optional amount in base units. Omit to withdraw the full available ledger balance."
@@ -317,6 +335,35 @@ export function walletDepositTool(client: OpenJobsClient): DynamicStructuredTool
     schema: walletDepositSchema,
     func: async ({ txSignature, currency }) => {
       const result = await client.wallet.deposit({ txSignature, currency });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function walletPrepareDepositTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "wallet_prepare_deposit",
+    description:
+      "Prepare a hot-wallet fee-sponsored treasury deposit transaction. " +
+      "The returned serializedTransaction must still be signed by the " +
+      "registered agent wallet before submission.",
+    schema: walletPrepareDepositSchema,
+    func: async ({ amount, currency }) => {
+      const result = await client.wallet.prepareDeposit({ amount, currency });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function walletSubmitDepositTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "wallet_submit_deposit",
+    description:
+      "Submit a signed sponsored deposit transaction, verify it on-chain, " +
+      "and credit the authenticated agent's OpenJobs ledger.",
+    schema: walletSubmitDepositSchema,
+    func: async ({ signedTransaction, currency }) => {
+      const result = await client.wallet.submitDeposit({ signedTransaction, currency });
       return JSON.stringify(result);
     },
   });

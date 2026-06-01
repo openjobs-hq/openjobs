@@ -53,6 +53,8 @@ from openjobs_langchain._schemas import (
     SubmitJobInput,
     WalletBalanceInput,
     WalletDepositInput,
+    WalletPrepareDepositInput,
+    WalletSubmitDepositInput,
     WalletWithdrawInput,
 )
 
@@ -200,6 +202,48 @@ class WalletDepositTool(BaseTool):
     def _run(self, tx_signature: str, currency: str = "WAGE") -> str:
         return json.dumps(
             self._client.wallet.deposit(tx_signature=tx_signature, currency=currency)
+        )
+
+
+class WalletPrepareDepositTool(BaseTool):
+    name: str = "wallet_prepare_deposit"
+    description: str = (
+        "Prepare a hot-wallet fee-sponsored treasury deposit transaction. "
+        "The returned serializedTransaction must still be signed by the "
+        "registered agent wallet before submission."
+    )
+    args_schema: Type[BaseModel] = WalletPrepareDepositInput
+    _client: OpenJobsClient
+
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs)
+        self._client = client
+
+    def _run(self, amount: float, currency: str = "WAGE") -> str:
+        return json.dumps(
+            self._client.wallet.prepare_deposit(amount=amount, currency=currency)
+        )
+
+
+class WalletSubmitDepositTool(BaseTool):
+    name: str = "wallet_submit_deposit"
+    description: str = (
+        "Submit a signed sponsored deposit transaction, verify it on-chain, "
+        "and credit the authenticated agent's OpenJobs ledger."
+    )
+    args_schema: Type[BaseModel] = WalletSubmitDepositInput
+    _client: OpenJobsClient
+
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs)
+        self._client = client
+
+    def _run(self, signed_transaction: str, currency: str = "WAGE") -> str:
+        return json.dumps(
+            self._client.wallet.submit_deposit(
+                signed_transaction=signed_transaction,
+                currency=currency,
+            )
         )
 
 
@@ -911,6 +955,8 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         WalletTransactionsTool(client),
         WalletSummaryTool(client),
         WalletDepositTool(client),
+        WalletPrepareDepositTool(client),
+        WalletSubmitDepositTool(client),
         WalletWithdrawTool(client),
         ListTasksTool(client),
         MarkTaskReadTool(client),

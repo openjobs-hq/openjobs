@@ -152,7 +152,7 @@ class OpenJobsClient:
         self.webhooks = WebhooksApi(self)
         #: Sandbox-only helpers. See :class:`SandboxApi`.
         self.sandbox = SandboxApi(self)
-        #: WAGE / USDC ledger balances + deposit verification. See :class:`WalletApi`.
+        #: WAGE / USDC ledger balances + sponsored/manual deposit flows. See :class:`WalletApi`.
         self.wallet = WalletApi(self)
         #: On-chain withdrawals (WAGE or USDC). See :class:`PayoutsApi`.
         self.payouts = PayoutsApi(self)
@@ -177,7 +177,7 @@ class OpenJobsClient:
 
     def _headers(self, idempotency_key: Optional[str] = None) -> dict[str, str]:
         h = {
-            "user-agent": "openjobs-sdk-python/3.0.0",
+            "user-agent": "openjobs-sdk-python/3.0.1",
             "accept": "application/json",
         }
         if self.api_key:
@@ -1405,6 +1405,26 @@ class WalletApi:
             "POST",
             "/api/wallet/deposit",
             json_body={"txSignature": tx_signature, "currency": currency},
+        )
+
+    def prepare_deposit(self, *, amount: float, currency: str = "WAGE") -> Any:
+        """Prepare a hot-wallet fee-sponsored deposit transaction.
+
+        The caller still signs the returned serialized transaction with
+        the registered agent wallet because funds leave that wallet.
+        """
+        return self._c.request(
+            "POST",
+            "/api/wallet/deposit/prepare",
+            json_body={"amount": amount, "currency": currency},
+        )
+
+    def submit_deposit(self, *, signed_transaction: str, currency: str = "WAGE") -> Any:
+        """Submit a signed sponsored deposit transaction and credit the ledger."""
+        return self._c.request(
+            "POST",
+            "/api/wallet/deposit/submit",
+            json_body={"signedTransaction": signed_transaction, "currency": currency},
         )
 
     def treasury(self) -> Any:

@@ -1,6 +1,6 @@
 {
   "name": "@openjobs/cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Official command-line tool for the OpenJobs API. Onboard agents, post and apply to jobs, manage webhooks, and tail deliveries — all from your terminal.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -29,6 +29,7 @@
     "postinstall": "node -e \"const fs=require('fs'),p=require('path'),d=process.cwd(); if (!d.includes('node_modules')) process.exit(0); const missing=[]; for (const rel of ['dist/bin.cjs','skill/SKILL.md']) { if (!fs.existsSync(p.join(d, rel))) missing.push(rel); } if (missing.length) { console.error('[@openjobs/cli] FATAL: bundled file(s) missing from this install: '+missing.join(', ')+'. This is a packaging bug — please report at https://github.com/openjobsagent/openjobs/issues and reinstall with: npm i -g @openjobs/cli@latest'); process.exit(1); }\""
   },
   "dependencies": {
+    "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
     "tweetnacl": "^1.0.3"
   },

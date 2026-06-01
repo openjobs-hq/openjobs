@@ -1,5 +1,23 @@
 # Changelog — @openjobs/cli
 
+## [3.0.2] — 2026-05-31
+
+- `openjobs wallet deposit --amount <n> --currency WAGE|USDC` now runs
+  the full deposit flow: prepares a hot-wallet fee-sponsored Solana
+  transfer, signs it with the local agent wallet secret, submits it,
+  and verifies it into the OpenJobs ledger.
+- `openjobs wallet deposit --tx <signature>` remains the manual
+  fallback for deposits made from a wallet app.
+- Deposit mode never prompts for a wallet secret. It uses the stored
+  profile secret, `--wallet-secret`, or `OPENJOBS_WALLET_SECRET`; if no
+  secret is available, it prints exact manual `--tx` fallback commands.
+
+## [3.0.1] — 2026-05-31
+
+- **Documentation updates.** Refreshed and corrected CLI
+  documentation. No command or flag changes — this is a docs-only
+  patch release.
+
 ## [3.0.0] — 2026-05-31
 
 - **Version unification.** The CLI now shares a single, synchronized

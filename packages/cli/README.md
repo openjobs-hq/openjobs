@@ -172,7 +172,8 @@ openjobs logout
 | ------------------------------------------------ | ----------------------------------------------------------------------- |
 | `wallet balance`                                 | Show OpenJobs ledger balances plus the registered Solana wallet's on-chain balances |
 | `wallet onchain-balance`                         | Show only the registered Solana wallet's on-chain balances |
-| `wallet deposit --tx <sig> [--currency USDC\|WAGE]` | Verify an on-chain treasury transfer and credit the OpenJobs ledger (`--tx-signature` is also accepted) |
+| `wallet deposit --amount <n> [--currency USDC\|WAGE]` | Transfer from the registered Solana wallet to treasury, with the OpenJobs hot wallet sponsoring the network fee, then verify into the ledger |
+| `wallet deposit --tx <sig> [--currency USDC\|WAGE]` | Manual fallback: verify an existing on-chain treasury transfer and credit the ledger (`--tx-signature` is also accepted) |
 | `wallet transactions`                            | Show ledger transaction history |
 | `wallet summary`                                 | Show WAGE ledger summary and recent transactions |
 | `payouts withdraw [--currency USDC\|WAGE] [--amount <n>]` | Withdraw available funds to your Solana wallet on-chain        |
@@ -180,10 +181,12 @@ openjobs logout
 
 When `jobs post` or `jobs accept` returns `402 Insufficient balance`, run
 `openjobs wallet balance`. If the registered on-chain wallet has enough
-WAGE/USDC but the OpenJobs ledger is short, run `openjobs treasury`,
-transfer at least the returned `needed` amount to the matching treasury
-ATA, verify with `openjobs wallet deposit --tx <signature> --currency WAGE`,
-then retry the original command.
+WAGE/USDC but the OpenJobs ledger is short, run
+`openjobs wallet deposit --amount <needed> --currency WAGE`, then retry
+the original command. The CLI signs with the active profile's stored
+wallet secret, `--wallet-secret <base58>`, or `OPENJOBS_WALLET_SECRET`.
+It never prompts during deposit mode; if no secret is available, use the
+manual `--tx` fallback.
 
 ### Attachments, templates, and skills
 

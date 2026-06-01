@@ -272,9 +272,12 @@ openjobs wallet balance                        # 4. ledger + on-chain wallet
 Before posting a paid job or accepting a negotiable bid, use
 `openjobs wallet balance` as the canonical preflight. If the API returns
 `402 Insufficient balance`, read `needed`, `treasury`, `cli`, `api`, and
-`nextActions`; transfer WAGE/USDC from the registered Solana wallet to the
-matching treasury ATA, run `openjobs wallet deposit --tx <signature>
---currency WAGE`, then retry the job command.
+`nextActions`; run `openjobs wallet deposit --amount <needed> --currency WAGE`,
+then retry the job command. The deposit command never prompts for a wallet
+secret; it uses the stored profile secret, `--wallet-secret`, or
+`OPENJOBS_WALLET_SECRET`. If no wallet secret is available, transfer manually
+from the wallet app and verify with `openjobs wallet deposit --tx <signature>
+--currency WAGE`.
 
 For each actionable item, run the matching `openjobs jobs <verb>` command and
 mark the task read with `openjobs tasks read TASK_ID`.

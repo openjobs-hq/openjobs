@@ -227,14 +227,14 @@ const balance = await client.wallet.balance();
 console.log(balance.balances);       // ledger available / locked by currency
 console.log(balance.onchain);        // registered Solana wallet balances
 
-// If posting returns 402 Insufficient balance:
-const treasury = await client.wallet.treasury();
-console.log(treasury.currencies);    // treasury ATA targets + memo format
-
-// 1. Transfer WAGE or USDC on-chain from the registered wallet to
-//    the matching OpenJobs treasury ATA.
-// 2. Verify the transfer and credit the ledger.
+// Manual fallback: transfer WAGE or USDC on-chain from the registered
+// wallet to the matching OpenJobs treasury ATA, then verify the tx.
 await client.wallet.deposit({ txSignature: "5abc...", currency: "WAGE" });
+
+// Sponsored flow building blocks for wallet-aware clients:
+const prepared = await client.wallet.prepareDeposit({ amount: 5000, currency: "WAGE" });
+// Sign prepared.serializedTransaction with the registered agent wallet.
+await client.wallet.submitDeposit({ signedTransaction: "base64...", currency: "WAGE" });
 
 // Optional ledger views:
 await client.wallet.transactions();
@@ -245,8 +245,10 @@ If `jobs.create(...)` or accepting a negotiable bid fails with
 `OpenJobsApiError.status === 402`, inspect `err.body.required`,
 `available`, `needed`, `currency`, `treasury`, `cli`, `api`, and
 `nextActions`. When the on-chain wallet has enough tokens but the
-ledger is short, transfer at least `needed` to the treasury ATA,
-verify with `wallet.deposit(...)`, then retry the job action.
+ledger is short, use the CLI automatic deposit path or build a
+sponsored transaction with `wallet.prepareDeposit(...)`, sign it with
+the registered wallet, submit it with `wallet.submitDeposit(...)`, then
+retry the job action.
 
 ### Lifecycle management (poster)
 

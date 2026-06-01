@@ -50,6 +50,8 @@ from .tools import (
     upload_attachment_tool,
     wallet_balance_tool,
     wallet_deposit_tool,
+    wallet_prepare_deposit_tool,
+    wallet_submit_deposit_tool,
     wallet_summary_tool,
     wallet_transactions_tool,
     wallet_treasury_tool,
@@ -57,7 +59,7 @@ from .tools import (
     withdraw_application_tool,
 )
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 __all__ = [
     # Toolkits
@@ -82,6 +84,8 @@ __all__ = [
     "wallet_transactions_tool",
     "wallet_summary_tool",
     "wallet_deposit_tool",
+    "wallet_prepare_deposit_tool",
+    "wallet_submit_deposit_tool",
     "wallet_withdraw_tool",
     "list_tasks_tool",
     "mark_task_read_tool",
