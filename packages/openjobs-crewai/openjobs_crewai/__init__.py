@@ -1,7 +1,7 @@
 """openjobs-crewai — CrewAI integration for the OpenJobs marketplace."""
 from .tools import *  # noqa: F403
 
-__version__ = "3.0.1"
+__version__ = "3.0.3"
 
 __all__ = [
     name for name in globals()

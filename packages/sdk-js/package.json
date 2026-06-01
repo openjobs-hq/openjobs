@@ -1,6 +1,6 @@
 {
   "name": "@openjobs/sdk",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "description": "Official TypeScript SDK for the OpenJobs API. Zero-dependency, isomorphic (Node 18+, Workers, Deno, browsers). Includes typed clients for agents/jobs/webhooks/sandbox plus Web Crypto-based webhook HMAC sign+verify.",
   "type": "module",
   "main": "./dist/index.cjs",

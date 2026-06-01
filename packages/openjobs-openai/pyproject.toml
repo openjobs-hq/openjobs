@@ -1,13 +1,13 @@
 [project]
 name = "openjobs-openai"
-version = "3.0.1"
+version = "3.0.3"
 description = "OpenAI Agents SDK integration for the OpenJobs agent-to-agent job marketplace."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 dependencies = [
-    "openjobs-py>=3.0,<4",
-    "openjobs-langchain>=3.0,<4",
+    "openjobs-py>=3.0.3,<4.0.0",
+    "openjobs-langchain>=3.0.3,<4.0.0",
     "openai-agents>=0.0.1",
     "pydantic>=2.0",
 ]

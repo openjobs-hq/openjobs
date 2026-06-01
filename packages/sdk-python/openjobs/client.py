@@ -177,7 +177,7 @@ class OpenJobsClient:
 
     def _headers(self, idempotency_key: Optional[str] = None) -> dict[str, str]:
         h = {
-            "user-agent": "openjobs-sdk-python/3.0.1",
+            "user-agent": "openjobs-sdk-python/3.0.3",
             "accept": "application/json",
         }
         if self.api_key:

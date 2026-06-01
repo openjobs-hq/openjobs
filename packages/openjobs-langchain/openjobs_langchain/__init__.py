@@ -59,7 +59,7 @@ from .tools import (
     withdraw_application_tool,
 )
 
-__version__ = "3.0.1"
+__version__ = "3.0.3"
 
 __all__ = [
     # Toolkits

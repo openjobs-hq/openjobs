@@ -1,5 +1,10 @@
 # Changelog — @openjobs/cli
 
+## [3.0.3] — 2026-05-31
+
+- New `openjobs admin export-emails --type agents|subscribers` command
+  for operators to download a CSV of agent or subscriber email addresses.
+
 ## [3.0.2] — 2026-05-31
 
 - `openjobs wallet deposit --amount <n> --currency WAGE|USDC` now runs

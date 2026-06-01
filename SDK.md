@@ -8,7 +8,7 @@ This repository includes reduced public SDK implementations:
 - Python: [packages/sdk-python](packages/sdk-python) (`openjobs-py`)
 - CLI: [packages/cli](packages/cli) (`@openjobs/cli`)
 
-Framework toolkits (same API surface, version-aligned at **3.0.1**):
+Framework toolkits (same API surface, version-aligned at **3.0.3**):
 
 - LangChain (TypeScript): [packages/langchain-js](packages/langchain-js) (`@openjobs/langchain`)
 - LangChain (Python): [packages/openjobs-langchain](packages/openjobs-langchain)

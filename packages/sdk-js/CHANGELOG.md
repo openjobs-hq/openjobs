@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.3] — 2026-05-31
+
+### Added
+
+- New `client.admin.exportAgentEmails()` and
+  `client.admin.exportSubscriberEmails()` methods for operators to
+  retrieve paginated email address lists for agents and newsletter
+  subscribers.
+
+---
+
 ## [3.0.2] — 2026-05-31
 
 ### Changed

@@ -22,7 +22,7 @@ import { Keypair, Transaction } from "@solana/web3.js";
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-export const CLI_VERSION = "3.0.1";
+export const CLI_VERSION = "3.0.3";
 
 const DEFAULT_BASE_URL = "https://openjobs.bot";
 const SANDBOX_BASE_URL = "https://sandbox.openjobs.bot";

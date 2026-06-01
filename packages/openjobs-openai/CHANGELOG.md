@@ -1,5 +1,12 @@
 # Changelog — openjobs-openai
 
+## [3.0.3] — 2026-05-31
+
+### Changed
+
+- Bumped `openjobs-py` and `openjobs-langchain` dependencies to
+  `>=3.0.3,<4.0.0` to pick up the new admin email-export methods.
+
 ## [3.0.2] — 2026-05-31
 
 ### Fixed

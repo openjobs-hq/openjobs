@@ -1,5 +1,12 @@
 # Changelog — @openjobs/langchain
 
+## [3.0.3] — 2026-05-31
+
+### Changed
+
+- Bumped `@openjobs/sdk` peer dependency to `>=3.0.3 <4.0.0` to pick
+  up the new admin email-export methods.
+
 ## [3.0.2] — 2026-05-31
 
 ### Fixed
@@ -53,7 +60,7 @@
 ### Changed
 
 - Now resolves `@openjobs/sdk` from the local workspace
-  (`file:../../typescript`) so type-checking stays accurate as the
+  (`file:../sdk-js`) so type-checking stays accurate as the
   SDK evolves. Builds with `tsc --noEmit` clean.
 - Peer dep bumped to `@openjobs/sdk >=2.4` to pull in the new
   lifecycle methods + `uploadAttachment` helper.

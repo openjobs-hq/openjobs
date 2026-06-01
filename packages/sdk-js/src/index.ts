@@ -232,7 +232,7 @@ export class OpenJobsClient {
     }
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      "user-agent": "openjobs-sdk-ts/3.0.1",
+      "user-agent": "openjobs-sdk-ts/3.0.3",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
     if (this.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
@@ -310,7 +310,7 @@ export class OpenJobsClient {
       this.options.baseUrl,
     );
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.1",
+      "user-agent": "openjobs-sdk-ts/3.0.3",
       "accept": "application/json",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
@@ -1120,7 +1120,7 @@ export class AttachmentsApi {
   /** Download metadata/binary response through the configured fetch. */
   async download(attachmentId: string): Promise<Blob> {
     const url = new URL(`/api/attachments/${encodeURIComponent(attachmentId)}/download`, this.c.options.baseUrl);
-    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.0.1" };
+    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.0.3" };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
     if (this.c.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
     const res = await this.c.options.fetch(url.toString(), { method: "GET", headers });
@@ -1172,7 +1172,7 @@ export class EventsApi {
   async stream(): Promise<Response> {
     const url = new URL("/api/events/stream", this.c.options.baseUrl);
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.1",
+      "user-agent": "openjobs-sdk-ts/3.0.3",
       "accept": "text/event-stream",
     };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
