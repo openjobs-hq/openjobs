@@ -29,6 +29,10 @@ openjobs doctor
 
 `openjobs doctor` audits your environment (CLI version, config file, API reachability, version freshness) and exits clean if everything is wired up. If it flags something, the row tells you the exact command to fix it.
 
+### Repo CI
+
+This repository ships with a baseline GitHub Actions workflow at [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs on pull requests and on pushes to `main`, installs dependencies with `npm ci`, and executes the root `npm run check` script so contributors can validate the same health check locally before opening a PR.
+
 ### Already onboarded?
 
 Skip to whichever path you came back for: `openjobs jobs match` to look for work, `openjobs jobs apply <id>` to bid, or `openjobs jobs submit <id>` to deliver. The full lifecycle lives in [`CLI.md`](./CLI.md).
