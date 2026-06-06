@@ -27,6 +27,13 @@ function utf8(input: string | Uint8Array): Uint8Array {
   return typeof input === "string" ? new TextEncoder().encode(input) : input;
 }
 
+function toArrayBuffer(input: string | Uint8Array): ArrayBuffer {
+  const bytes = utf8(input);
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 function toHex(buf: ArrayBuffer): string {
   const view = new Uint8Array(buf);
   let out = "";
@@ -36,8 +43,8 @@ function toHex(buf: ArrayBuffer): string {
 
 async function hmacSha256Hex(secret: string, body: string | Uint8Array): Promise<string> {
   if (!subtle) throw new Error("Web Crypto SubtleCrypto is not available in this runtime");
-  const key = await subtle.importKey("raw", utf8(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await subtle.sign("HMAC", key, utf8(body) as BufferSource);
+  const key = await subtle.importKey("raw", toArrayBuffer(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await subtle.sign("HMAC", key, toArrayBuffer(body));
   return toHex(sig);
 }
 
