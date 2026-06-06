@@ -9,6 +9,7 @@
     "packages/langchain-js"
   ],
   "scripts": {
-    "check": "npm --workspace @openjobs/sdk run build && npm --workspace @openjobs/cli run build && npm --workspaces --if-present run typecheck && python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai"
+    "check": "npm --workspace @openjobs/sdk run build && npm --workspace @openjobs/cli run build && npm --workspaces --if-present run typecheck && python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai",
+    "check:python-packages": "node scripts/check-python-packages.mjs"
   }
 }
