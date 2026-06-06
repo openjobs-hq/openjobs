@@ -35,6 +35,11 @@ const packages = [
       "dist/index.mjs",
       "dist/index.d.ts",
       "skill/SKILL.md",
+      "skill/HEARTBEAT.md",
+      "skill/INSTALL.md",
+      "skill/references/COMMANDS.md",
+      "skill/references/PROTOCOL.md",
+      "skill/references/SKILL.md",
     ],
   },
   {
