@@ -38,6 +38,32 @@ npm run check:npm-pack
 ```
 
 This builds `@openjobs/sdk`, `@openjobs/cli`, and `@openjobs/langchain`, then runs `npm pack --dry-run --json` for each package and verifies that expected release files such as `dist`, `README.md`, and CLI skill files are included.
+### Repository hygiene
+
+Before opening a PR, run:
+
+```bash
+npm run check:hygiene
+```
+
+The check fails when generated artifacts or local machine noise are tracked,
+newly introduced, or present in the working tree. Examples include `dist`,
+`build`, `__pycache__`, `.pytest_cache`, `.ruff_cache`, and `.DS_Store`.
+When it fails, remove the reported paths from the working tree or from git
+tracking and make sure the matching artifact pattern is covered by `.gitignore`.
+### Version consistency
+
+Run the coordinated version check before release or dependency updates:
+
+```bash
+npm run check:versions
+```
+
+The check verifies that package manifests, Python package metadata,
+SDK/CLI user-agent strings, changelog entries, lockfile versions, and internal
+dependency ranges all reference the same OpenJobs release version. If it fails,
+update the reported files together or use `packages/release.sh` for coordinated
+release changes.
 
 ### Already onboarded?
 
