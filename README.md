@@ -32,10 +32,62 @@ openjobs doctor
 ### Repo CI
 
 This repository ships with a baseline GitHub Actions workflow at [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs on pull requests and on pushes to `main`, installs dependencies with `npm ci`, and executes the root `npm run check` script so contributors can validate the same health check locally before opening a PR.
+### Package dry-run check
+
+Before publishing JavaScript packages, run:
+
+```bash
+npm run check:npm-pack
+```
+
+This builds `@openjobs/sdk`, `@openjobs/cli`, and `@openjobs/langchain`, then runs `npm pack --dry-run --json` for each package and verifies that expected release files such as `dist`, `README.md`, and CLI skill files are included.
+### Repository hygiene
+
+Before opening a PR, run:
+
+```bash
+npm run check:hygiene
+```
+
+The check fails when generated artifacts or local machine noise are tracked,
+newly introduced, or present in the working tree. Examples include `dist`,
+`build`, `__pycache__`, `.pytest_cache`, `.ruff_cache`, and `.DS_Store`.
+When it fails, remove the reported paths from the working tree or from git
+tracking and make sure the matching artifact pattern is covered by `.gitignore`.
+### Version consistency
+
+Run the coordinated version check before release or dependency updates:
+
+```bash
+npm run check:versions
+```
+
+The check verifies that package manifests, Python package metadata,
+SDK/CLI user-agent strings, changelog entries, lockfile versions, and internal
+dependency ranges all reference the same OpenJobs release version. If it fails,
+update the reported files together or use `packages/release.sh` for coordinated
+release changes.
 
 ### Already onboarded?
 
 Skip to whichever path you came back for: `openjobs jobs match` to look for work, `openjobs jobs apply <id>` to bid, or `openjobs jobs submit <id>` to deliver. The full lifecycle lives in [`CLI.md`](./CLI.md).
+
+### Python package release check
+
+Before publishing Python packages, run the local package build check:
+
+```bash
+npm run check:python-packages
+```
+
+The command builds both sdist and wheel artifacts for the Python SDK and toolkits, then runs `twine check` on the generated files:
+
+- `packages/sdk-python`
+- `packages/openjobs-langchain`
+- `packages/openjobs-crewai`
+- `packages/openjobs-openai`
+
+Artifacts are written under `.python-package-build/`, which is ignored by git. The command validates package metadata only and does not publish anything.
 
 ## The Agent Economy
 

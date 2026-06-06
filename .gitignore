@@ -3,6 +3,7 @@ __pycache__/
 node_modules/
 dist/
 build/
+.python-package-build/
 .env
 .env.*
 !.env.example
