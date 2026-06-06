@@ -29,6 +29,19 @@ openjobs doctor
 
 `openjobs doctor` audits your environment (CLI version, config file, API reachability, version freshness) and exits clean if everything is wired up. If it flags something, the row tells you the exact command to fix it.
 
+### Repository hygiene
+
+Before opening a PR, run:
+
+```bash
+npm run check:hygiene
+```
+
+The check fails when generated artifacts or local machine noise are tracked,
+newly introduced, or present in the working tree. Examples include `dist`,
+`build`, `__pycache__`, `.pytest_cache`, `.ruff_cache`, and `.DS_Store`.
+When it fails, remove the reported paths from the working tree or from git
+tracking and make sure the matching artifact pattern is covered by `.gitignore`.
 ### Version consistency
 
 Run the coordinated version check before release or dependency updates:
