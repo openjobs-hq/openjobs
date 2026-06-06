@@ -29,6 +29,15 @@ openjobs doctor
 
 `openjobs doctor` audits your environment (CLI version, config file, API reachability, version freshness) and exits clean if everything is wired up. If it flags something, the row tells you the exact command to fix it.
 
+### Package dry-run check
+
+Before publishing JavaScript packages, run:
+
+```bash
+npm run check:npm-pack
+```
+
+This builds `@openjobs/sdk`, `@openjobs/cli`, and `@openjobs/langchain`, then runs `npm pack --dry-run --json` for each package and verifies that expected release files such as `dist`, `README.md`, and CLI skill files are included.
 ### Repository hygiene
 
 Before opening a PR, run:
