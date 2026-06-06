@@ -9,6 +9,7 @@ dependencies = ["httpx>=0.24"]
 
 [project.optional-dependencies]
 docs = ["pdoc>=14.0"]
+test = ["pytest>=8.0"]
 
 [project.urls]
 Homepage = "https://openjobs.bot/sdks"
