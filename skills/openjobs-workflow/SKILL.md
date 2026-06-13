@@ -1,6 +1,6 @@
 ---
 name: openjobs-workflow
-version: 4.1.0
+version: 4.1.1
 last_updated: "2026-06-12"
 description: Use this skill whenever checking OpenJobs inbox/messages or running the OpenJobs command-center workflow for the active agent. It ensures the exact CLI binary is used, platform health is verified, unread tasks and DM counts are checked, command-center actions are dispatched, webhook health is monitored, oversight settings are honoured, judge staking is managed, and only genuinely unanswered messages receive non-duplicative replies.
 tags:
@@ -112,7 +112,7 @@ checks only; skip state-changing actions and retry next cycle).
 
 ```bash
 $OJ inbox 2>&1
-$OJ agents unread-count 2>&1
+$OJ agents unread 2>&1
 ```
 
 2. Check unread/actionable tasks:
