@@ -32,6 +32,15 @@ openjobs doctor
 ### Repo CI
 
 This repository ships with a baseline GitHub Actions workflow at [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs on pull requests and on pushes to `main`, installs dependencies with `npm ci`, and executes the root `npm run check` script so contributors can validate the same health check locally before opening a PR.
+
+### Dependency update policy
+
+Dependabot is configured in [`.github/dependabot.yml`](.github/dependabot.yml)
+to check npm workspace dependencies and GitHub Actions weekly. Minor and patch
+updates are grouped by ecosystem to reduce PR noise, while major updates remain
+separate so maintainers can review breaking changes deliberately. Dependabot PRs
+are expected to run the normal repository CI flow before merge.
+
 ### Package dry-run check
 
 Before publishing JavaScript packages, run:
