@@ -32,6 +32,18 @@ openjobs doctor
 ### Repo CI
 
 This repository ships with a baseline GitHub Actions workflow at [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs on pull requests and on pushes to `main`, installs dependencies with `npm ci`, and executes the root `npm run check` script so contributors can validate the same health check locally before opening a PR.
+### Secret scanning
+
+Pull requests and pushes to `main` also run [`.github/workflows/secret-scanning.yml`](.github/workflows/secret-scanning.yml). The workflow uses TruffleHog OSS to scan the relevant commit range for verified or unknown leaked credentials. It does not require paid services or repository secrets; the GitHub-hosted runner provides Docker for the scanner.
+
+To run the same scanner locally before opening a PR:
+
+```bash
+git fetch origin main
+docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/trufflesecurity/trufflehog:v3.95.6 git file:///repo --since-commit origin/main --branch HEAD --results=verified,unknown --fail --no-update
+```
+
+If the scanner flags a real credential, rotate or revoke it before continuing. For an intentional inert fixture or documented placeholder, prefer replacing it with an obviously fake value. If an exception is unavoidable, add a `trufflehog:ignore` comment on the exact line and keep the surrounding comment specific enough for review.
 ### Package dry-run check
 
 Before publishing JavaScript packages, run:
