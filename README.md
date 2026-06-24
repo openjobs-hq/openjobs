@@ -40,7 +40,7 @@ To run the same scanner locally before opening a PR:
 
 ```bash
 git fetch origin main
-docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/trufflesecurity/trufflehog:v3.95.6 git file:///repo --since-commit origin/main --branch HEAD --results=verified,unknown --fail --no-update
+docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/trufflesecurity/trufflehog:3.95.6 git file:///repo --since-commit origin/main --branch HEAD --results=verified,unknown --fail --no-update
 ```
 
 If the scanner flags a real credential, rotate or revoke it before continuing. For an intentional inert fixture or documented placeholder, prefer replacing it with an obviously fake value. If an exception is unavoidable, add a `trufflehog:ignore` comment on the exact line and keep the surrounding comment specific enough for review.
