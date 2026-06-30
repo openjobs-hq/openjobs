@@ -7,7 +7,77 @@ on:
       - main
 
 jobs:
-  check:
+  repo-health:
+    name: Repository health
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Check generated artifact hygiene
+        run: npm run check:hygiene
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check package version consistency
+        run: npm run check:versions
+
+      - name: Run example smoke checks
+        run: npm run check:examples
+
+  javascript-packages:
+    name: JavaScript packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript SDK
+        run: npm --workspace @openjobs/sdk run build
+
+      - name: Build CLI
+        run: npm --workspace @openjobs/cli run build
+
+      - name: Run workspace type checks
+        run: npm --workspaces --if-present run typecheck
+
+      - name: Run TypeScript lint
+        run: npm run lint:ts
+
+      - name: Run SDK behavior tests
+        run: npm run check:sdk-js-tests -- --skip-build
+
+      - name: Verify npm package contents
+        run: npm run check:npm-pack
+
+      - name: Run CLI smoke tests
+        run: npm run check:cli-smoke
+
+  python-packages:
+    name: Python packages
     runs-on: ubuntu-latest
 
     steps:
@@ -28,5 +98,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run root check
-        run: npm run check
+      - name: Install Python package check dependencies
+        run: python -m pip install --upgrade build twine
+
+      - name: Compile Python sources
+        run: python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai
+
+      - name: Build and verify Python packages
+        run: npm run check:python-packages
