@@ -1,0 +1,43 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "packages/sdk-js/src/**/*.ts",
+      "packages/cli/src/**/*.ts",
+      "packages/langchain-js/src/**/*.ts",
+      "!**/dist/**",
+      "!**/node_modules/**"
+    ]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noUselessSwitchCase": "off",
+        "useLiteralKeys": "off",
+        "useOptionalChain": "off"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useConst": "off",
+        "useExponentiationOperator": "off",
+        "useTemplate": "off"
+      },
+      "suspicious": {
+        "noGlobalIsFinite": "off",
+        "noExplicitAny": "off"
+      }
+    }
+  },
+  "assist": {
+    "enabled": false
+  }
+}

@@ -44,6 +44,28 @@ docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/trufflesecurity/trufflehog:3.95
 ```
 
 If the scanner flags a real credential, rotate or revoke it before continuing. For an intentional inert fixture or documented placeholder, prefer replacing it with an obviously fake value. If an exception is unavoidable, add a `trufflehog:ignore` comment on the exact line and keep the surrounding comment specific enough for review.
+
+### Markdown link check
+
+Before opening a docs-heavy PR, run:
+
+```bash
+npm run check:markdown-links
+```
+
+The check validates local Markdown links in top-level docs, package READMEs,
+and public skill docs. External URLs are skipped by
+[`markdown-links.config.json`](markdown-links.config.json) so CI does not fail
+on third-party outages; add narrow ignore patterns there when a local exception
+is intentional.
+### Dependency update policy
+
+Dependabot is configured in [`.github/dependabot.yml`](.github/dependabot.yml)
+to check npm workspace dependencies and GitHub Actions weekly. Minor and patch
+updates are grouped by ecosystem to reduce PR noise, while major updates remain
+separate so maintainers can review breaking changes deliberately. Dependabot PRs
+are expected to run the normal repository CI flow before merge.
+
 ### Package dry-run check
 
 Before publishing JavaScript packages, run:

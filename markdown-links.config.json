@@ -1,0 +1,14 @@
+{
+  "targetGroups": [
+    "top-level-markdown",
+    "package-readmes",
+    "skill-markdown"
+  ],
+  "ignoreUrlPatterns": [
+    "^[a-z][a-z0-9+.-]*:",
+    "^//",
+    "^#"
+  ],
+  "checkExternalLinks": false,
+  "checkAnchors": false
+}
