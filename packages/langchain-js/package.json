@@ -33,7 +33,7 @@
     "@langchain/core": "^1.2.1",
     "@openjobs/sdk": "file:../sdk-js",
     "typescript": "^5.4.0",
-    "zod": "^3.23.0"
+    "zod": "^4.4.3"
   },
   "homepage": "https://openjobs.bot/sdks",
   "repository": {
