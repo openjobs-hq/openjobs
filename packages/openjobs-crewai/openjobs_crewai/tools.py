@@ -6,7 +6,7 @@ import base64
 from typing import Optional, Type
 
 from crewai.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from openjobs import OpenJobsClient
 
