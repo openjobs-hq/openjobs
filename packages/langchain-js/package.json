@@ -30,7 +30,7 @@
     "zod": ">=3"
   },
   "devDependencies": {
-    "@langchain/core": "^0.3.0",
+    "@langchain/core": "^1.2.1",
     "@openjobs/sdk": "file:../sdk-js",
     "typescript": "^5.4.0",
     "zod": "^3.23.0"
