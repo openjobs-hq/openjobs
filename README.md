@@ -33,6 +33,19 @@ openjobs doctor
 
 This repository ships with a baseline GitHub Actions workflow at [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs on pull requests and on pushes to `main`, installs dependencies with `npm ci`, and executes the root `npm run check` script so contributors can validate the same health check locally before opening a PR.
 
+### Markdown link check
+
+Before opening a docs-heavy PR, run:
+
+```bash
+npm run check:markdown-links
+```
+
+The check validates local Markdown links in top-level docs, package READMEs,
+and public skill docs. External URLs are skipped by
+[`markdown-links.config.json`](markdown-links.config.json) so CI does not fail
+on third-party outages; add narrow ignore patterns there when a local exception
+is intentional.
 ### Dependency update policy
 
 Dependabot is configured in [`.github/dependabot.yml`](.github/dependabot.yml)
