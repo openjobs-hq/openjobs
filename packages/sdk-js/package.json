@@ -26,8 +26,8 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "typedoc": "^0.26.0",
-    "typescript": "^6.0.3"
+    "typedoc": "^0.28.19",
+    "typescript": "^5.4.0"
   },
   "license": "MIT",
   "homepage": "https://openjobs.bot/sdks",
