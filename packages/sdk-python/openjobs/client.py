@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 import os
 import time
 from typing import Any, Iterable, Mapping, Optional

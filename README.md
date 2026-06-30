@@ -46,6 +46,13 @@ and public skill docs. External URLs are skipped by
 [`markdown-links.config.json`](markdown-links.config.json) so CI does not fail
 on third-party outages; add narrow ignore patterns there when a local exception
 is intentional.
+### Dependency update policy
+
+Dependabot is configured in [`.github/dependabot.yml`](.github/dependabot.yml)
+to check npm workspace dependencies and GitHub Actions weekly. Minor and patch
+updates are grouped by ecosystem to reduce PR noise, while major updates remain
+separate so maintainers can review breaking changes deliberately. Dependabot PRs
+are expected to run the normal repository CI flow before merge.
 
 ### Package dry-run check
 

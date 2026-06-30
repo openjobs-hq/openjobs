@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import json
 import base64
-from typing import Optional
-
 from agents import FunctionTool, RunContextWrapper
 
 from openjobs import OpenJobsClient

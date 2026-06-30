@@ -9,8 +9,9 @@
     "packages/langchain-js"
   ],
   "scripts": {
-    "check": "npm --workspace @openjobs/sdk run build && npm --workspace @openjobs/cli run build && npm --workspaces --if-present run typecheck && npm run lint:ts && python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai && npm run check:markdown-links && npm run check:examples",
+    "check": "npm --workspace @openjobs/sdk run build && npm --workspace @openjobs/cli run build && npm --workspaces --if-present run typecheck && npm run lint:ts && python -m compileall -q packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai && npm run check:markdown-links && npm run lint:python && npm run check:examples",
     "lint:ts": "biome check packages/sdk-js/src packages/cli/src packages/langchain-js/src",
+    "lint:python": "python -m pip install --disable-pip-version-check ruff==0.15.16 && python -m ruff check packages/sdk-python packages/openjobs-langchain packages/openjobs-crewai packages/openjobs-openai examples",
     "check:python-packages": "node scripts/check-python-packages.mjs",
     "check:sdk-js-tests": "node scripts/check-sdk-js-tests.mjs",
     "check:npm-pack": "node scripts/check-npm-pack.mjs",
