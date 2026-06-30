@@ -1,0 +1,161 @@
+name: Release SDKs
+
+# Required only when dry_run is false:
+# - NPM_TOKEN publishes npm packages.
+# - PYPI_API_TOKEN publishes PyPI packages. Integration-specific PyPI token
+#   overrides may be added later, but this workflow intentionally requires the
+#   shared token before allowing a real publish run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver version to release, for example 2.6.0"
+        required: true
+        type: string
+      target:
+        description: "Package group to release"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - both
+          - ts
+          - py
+          - cli
+          - integrations
+          - langchain-py
+          - crewai-py
+          - openai-agents-py
+          - langchain-ts
+      dry_run:
+        description: "Run builds and package checks without publishing"
+        required: true
+        default: true
+        type: boolean
+      skip_changelog_check:
+        description: "Bypass per-package changelog checks"
+        required: true
+        default: false
+        type: boolean
+      confirm_publish:
+        description: "For real publishing only: type publish"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-sdks-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release SDKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_TARGET: ${{ inputs.target }}
+      RELEASE_DRY_RUN: ${{ inputs.dry_run }}
+      RELEASE_SKIP_CHANGELOG_CHECK: ${{ inputs.skip_changelog_check }}
+      RELEASE_CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      PYPI_API_TOKEN_LANGCHAIN: ${{ secrets.PYPI_API_TOKEN_LANGCHAIN }}
+      PYPI_API_TOKEN_CREWAI: ${{ secrets.PYPI_API_TOKEN_CREWAI }}
+      PYPI_API_TOKEN_OPENAI_AGENTS: ${{ secrets.PYPI_API_TOKEN_OPENAI_AGENTS }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Install Python release dependencies
+        run: python -m pip install --upgrade build twine pdoc
+
+      - name: Validate release inputs and guards
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+            echo "version must be semver, got: $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+          needs_npm=0
+          needs_pypi=0
+
+          case "$RELEASE_TARGET" in
+            all|both|ts|cli|integrations|langchain-ts) needs_npm=1 ;;
+          esac
+
+          case "$RELEASE_TARGET" in
+            all|both|py|integrations|langchain-py|crewai-py|openai-agents-py) needs_pypi=1 ;;
+          esac
+
+          if [[ "$RELEASE_DRY_RUN" != "true" ]]; then
+            if [[ "$RELEASE_CONFIRM_PUBLISH" != "publish" ]]; then
+              echo "real publishing requires confirm_publish=publish" >&2
+              exit 1
+            fi
+
+            if [[ "$needs_npm" -eq 1 && -z "${NPM_TOKEN:-}" ]]; then
+              echo "NPM_TOKEN is required for the selected publish target." >&2
+              exit 1
+            fi
+
+            if [[ "$needs_pypi" -eq 1 && -z "${PYPI_API_TOKEN:-}" ]]; then
+              echo "PYPI_API_TOKEN is required for the selected publish target." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Run SDK release script
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          args=("$RELEASE_VERSION" "--target" "$RELEASE_TARGET")
+
+          if [[ "$RELEASE_DRY_RUN" == "true" ]]; then
+            args+=("--dry-run")
+          fi
+
+          if [[ "$RELEASE_SKIP_CHANGELOG_CHECK" == "true" ]]; then
+            args+=("--skip-changelog-check")
+          fi
+
+          bash ./packages/release.sh "${args[@]}"
+
+      - name: Write release summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Release SDKs"
+            echo ""
+            echo "- Version: \`$RELEASE_VERSION\`"
+            echo "- Target: \`$RELEASE_TARGET\`"
+            echo "- Dry run: \`$RELEASE_DRY_RUN\`"
+            echo "- Changelog check skipped: \`$RELEASE_SKIP_CHANGELOG_CHECK\`"
+          } >> "$GITHUB_STEP_SUMMARY"
