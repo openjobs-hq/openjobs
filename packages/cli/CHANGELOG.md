@@ -16,6 +16,15 @@ upstream openjobs.bot command surface.
 
 - Requests target the versioned `/api/v1` API path.
 
+### Security
+
+- HTML error-page titles are extracted with a linear scan instead of a
+  backtracking regex, so an adversarial multi-megabyte response body
+  can no longer stall the CLI (CodeQL: polynomial ReDoS).
+- Config v1 snapshot writes use create-if-absent semantics instead of
+  exists-then-write, removing a file-system race between concurrent
+  CLI runs (CodeQL: TOCTOU).
+
 ---
 ## [3.0.3] — 2026-05-31
 

@@ -1338,8 +1338,11 @@ function readConfigFile(
   if (v1env) entry.env = v1env;
   const multi: MultiAgentConfig = { version: 2, currentAgent: "default", agents: { default: entry } };
   try {
-    const bak = p + ".v1.bak";
-    if (!fs.existsSync(bak)) fs.writeFileSync(bak, raw, { mode: 0o600 });
+    try {
+      // flag "wx" creates the snapshot only if absent, without an
+      // exists check that would race against concurrent CLI runs.
+      fs.writeFileSync(p + ".v1.bak", raw, { mode: 0o600, flag: "wx" });
+    } catch { /* snapshot already exists — keep the original */ }
     fs.writeFileSync(p, JSON.stringify(multi, null, 2) + "\n", { mode: 0o600 });
     try { fs.chmodSync(p, 0o600); } catch { /* best effort */ }
   } catch { /* migration write is best-effort; in-memory view still works */ }
@@ -1846,16 +1849,15 @@ export function saveMultiConfig(deps: Deps, multi: MultiAgentConfig): void {
   fs.mkdirSync(path.dirname(p), { recursive: true, mode: 0o700 });
   // If the existing file is v1, snapshot it as `.v1.bak` exactly once
   // so the operator can recover their old apiKey if they downgrade.
-  if (fs.existsSync(p)) {
-    try {
-      const raw = fs.readFileSync(p, "utf8");
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && parsed.version !== 2) {
-        const bak = p + ".v1.bak";
-        if (!fs.existsSync(bak)) fs.writeFileSync(bak, raw, { mode: 0o600 });
-      }
-    } catch { /* ignore — backup is best-effort */ }
-  }
+  // Read and create-if-absent directly (ENOENT/EEXIST land in the catch)
+  // instead of exists-then-act, which is a check/use race.
+  try {
+    const raw = fs.readFileSync(p, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.version !== 2) {
+      fs.writeFileSync(p + ".v1.bak", raw, { mode: 0o600, flag: "wx" });
+    }
+  } catch { /* ignore — backup is best-effort */ }
   multi.version = 2;
   fs.writeFileSync(p, JSON.stringify(multi, null, 2) + "\n", { mode: 0o600 });
   try { fs.chmodSync(p, 0o600); } catch { /* best effort */ }
@@ -2119,10 +2121,21 @@ export function extractErrorMessage(parsed: any, status: number): string {
     const trimmed = parsed.trim();
     if (trimmed) {
       // If it's an HTML error page, surface the <title> if present;
-      // otherwise compress it to a single short line.
+      // otherwise compress it to a single short line. The title is
+      // extracted with a linear index scan over the head of the
+      // document rather than a backtracking regex, because the body is
+      // remote-controlled input and a polynomial regex can be made to
+      // hang the CLI on adversarial multi-megabyte responses.
       if (/^<!doctype html|^<html/i.test(trimmed)) {
-        const title = /<title[^>]*>([^<]+)<\/title>/i.exec(trimmed);
-        if (title?.[1]) return title[1].trim();
+        const head = trimmed.slice(0, 4096);
+        const lower = head.toLowerCase();
+        const open = lower.indexOf("<title");
+        const gt = open === -1 ? -1 : head.indexOf(">", open);
+        const lt = gt === -1 ? -1 : head.indexOf("<", gt + 1);
+        if (lt !== -1 && lower.startsWith("</title", lt)) {
+          const text = head.slice(gt + 1, lt).trim();
+          if (text) return text;
+        }
         return `HTTP ${status} (HTML error page)`;
       }
       const oneLine = trimmed.replace(/\s+/g, " ");
