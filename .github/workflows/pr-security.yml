@@ -30,9 +30,16 @@ jobs:
   dependency-review:
     name: Dependency review
     # The action compares the PR's dependency diff, so it only runs on PRs.
+    # Requires the repository's Dependency graph to be enabled once, in
+    # Settings > Advanced Security > Dependency graph.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    permissions:
+      contents: read
+      # Needed for comment-summary-in-pr to post the findings summary.
+      pull-requests: write
 
     steps:
       - name: Check out repository
