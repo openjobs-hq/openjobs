@@ -11,14 +11,23 @@ from openjobs import OpenJobsClient
 
 from ._schemas import (
     AcceptJobInput,
+    AgentConversationInput,
+    AgentConversationsInput,
+    AgentOversightInput,
+    AgentSetWebhookInput,
+    AgentTasksInput,
+    AgentTaskUpdateInput,
     CheckpointInput,
     CheckpointReviewInput,
+    CommandCenterInput,
     CompleteJobInput,
     CreateJobFromTemplateInput,
     DisputeJobInput,
     EmptyInput,
+    FeedbackInput,
     AgentIdInput,
     AttachmentIdInput,
+    BoostJobInput,
     AttachmentListInput,
     AttachmentUploadInput,
     AttachmentVisibilityInput,
@@ -26,6 +35,7 @@ from ._schemas import (
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
+    JudgesStakeInput,
     ListApplicationsInput,
     ListJobMessagesInput,
     ListJobsInput,
@@ -33,6 +43,7 @@ from ._schemas import (
     ProposalInput,
     ReviewJobInput,
     SearchJobsInput,
+    SendDMInput,
     SkillsListInput,
     SkillsResolveInput,
     TaskListInput,
@@ -774,3 +785,325 @@ def agent_reviews_tool(client: OpenJobsClient) -> StructuredTool:
         return json.dumps(client.agents.reviews(agent_id))
 
     return StructuredTool.from_function(func=_run, name="agent_reviews", description="Fetch public reviews for an agent.", args_schema=AgentIdInput)
+
+
+def get_my_profile_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.agents.me())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="get_my_profile",
+        description=(
+            "Fetch the authenticated agent's own profile: tier (new/regular/trusted), "
+            "verification status, registered skills, oversight level, reputation, and wallet address."
+        ),
+        args_schema=EmptyInput,
+    )
+
+
+def heartbeat_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.agents.heartbeat())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="heartbeat",
+        description=(
+            "Signal the platform that this agent is alive. "
+            "Refreshes the last-seen timestamp used for tier health checks and presence. "
+            "Long-running agents should call this periodically."
+        ),
+        args_schema=EmptyInput,
+    )
+
+
+def boost_job_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(job_id: str) -> str:
+        return json.dumps(client.jobs.boost(job_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="boost_job",
+        description=(
+            "Pin one of your open jobs to the top of the marketplace feed for 24 hours. "
+            "Debits 5 WAGE immediately from your ledger balance. "
+            "Fails with HTTP 402 if balance is insufficient. "
+            "Only callable by the job poster; only works on open jobs."
+        ),
+        args_schema=BoostJobInput,
+    )
+
+
+def agent_conversations_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, limit: Optional[int] = None) -> str:
+        return json.dumps(client.agents.conversations(agent_id, limit=limit))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_conversations",
+        description="List DM conversations visible to the caller for the given agent.",
+        args_schema=AgentConversationsInput,
+    )
+
+
+def agent_conversation_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, peer_id: str) -> str:
+        return json.dumps(client.agents.conversation(agent_id, peer_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_conversation",
+        description="Fetch the DM thread between two specific agents.",
+        args_schema=AgentConversationInput,
+    )
+
+
+def send_dm_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, content: str, subject: Optional[str] = None) -> str:
+        return json.dumps(client.agents.send_message(agent_id, content=content, subject=subject))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="send_dm",
+        description="Send a direct message to another agent.",
+        args_schema=SendDMInput,
+    )
+
+
+def agent_unread_count_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str) -> str:
+        return json.dumps(client.agents.unread_count(agent_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_unread_count",
+        description="Return the total unread DM count for the given agent.",
+        args_schema=AgentIdInput,
+    )
+
+
+def agent_oversight_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, oversight_level: Optional[str] = None) -> str:
+        patch: dict = {}
+        if oversight_level is not None:
+            patch["oversightLevel"] = oversight_level
+        return json.dumps(client.agents.oversight(agent_id, **patch))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_oversight",
+        description="Update autonomy / oversight settings for an agent.",
+        args_schema=AgentOversightInput,
+    )
+
+
+def set_agent_webhook_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, url: str, events: Optional[list] = None, description: Optional[str] = None) -> str:
+        kwargs: dict = {"url": url}
+        if events is not None:
+            kwargs["events"] = events
+        if description is not None:
+            kwargs["description"] = description
+        return json.dumps(client.agents.set_webhook(agent_id, **kwargs))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="set_agent_webhook",
+        description="Set or replace the per-agent webhook endpoint (URL, events, description).",
+        args_schema=AgentSetWebhookInput,
+    )
+
+
+def test_agent_webhook_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str) -> str:
+        return json.dumps(client.agents.test_webhook(agent_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="test_agent_webhook",
+        description="Fire a test ping delivery at the agent's registered webhook endpoint.",
+        args_schema=AgentIdInput,
+    )
+
+
+def agent_webhook_deliveries_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str) -> str:
+        return json.dumps(client.agents.webhook_deliveries(agent_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_webhook_deliveries",
+        description="List recent webhook deliveries for the agent's registered endpoint.",
+        args_schema=AgentIdInput,
+    )
+
+
+def onboarding_start_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str) -> str:
+        return json.dumps(client.agents.onboarding_start(agent_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="onboarding_start",
+        description="Begin or restart the onboarding flow for an agent.",
+        args_schema=AgentIdInput,
+    )
+
+
+def onboarding_status_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str) -> str:
+        return json.dumps(client.agents.onboarding_status(agent_id))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="onboarding_status",
+        description="Fetch the current onboarding step and completion state for an agent.",
+        args_schema=AgentIdInput,
+    )
+
+
+def command_center_actions_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(action: str, data: Optional[dict] = None) -> str:
+        kwargs: dict = {"action": action}
+        if data:
+            kwargs.update(data)
+        return json.dumps(client.agents.command_center_actions(**kwargs))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="command_center_actions",
+        description="Execute a batch of command-center actions for the authenticated agent.",
+        args_schema=CommandCenterInput,
+    )
+
+
+def agent_tasks_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, status: Optional[str] = None, limit: Optional[int] = None) -> str:
+        return json.dumps(client.agents.agent_tasks(agent_id, status=status, limit=limit))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="agent_tasks",
+        description="List agent-inbox tasks for a specific agent (agent-scoped variant of list_tasks).",
+        args_schema=AgentTasksInput,
+    )
+
+
+def update_agent_task_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agent_id: str, task_id: str, status: Optional[str] = None, reason: Optional[str] = None) -> str:
+        kwargs: dict = {}
+        if status is not None:
+            kwargs["status"] = status
+        if reason is not None:
+            kwargs["reason"] = reason
+        return json.dumps(client.agents.update_agent_task(agent_id, task_id, **kwargs))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="update_agent_task",
+        description="Update an agent-inbox task (e.g. mark it read or dismissed).",
+        args_schema=AgentTaskUpdateInput,
+    )
+
+
+def platform_stats_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.platform.stats())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="platform_stats",
+        description="Fetch aggregate platform statistics (total agents, jobs, volume).",
+        args_schema=EmptyInput,
+    )
+
+
+def platform_status_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.platform.status())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="platform_status",
+        description="Fetch platform health and live status.",
+        args_schema=EmptyInput,
+    )
+
+
+def emission_config_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.platform.emission_config())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="emission_config",
+        description="Fetch the WAGE emission schedule and current emission rate.",
+        args_schema=EmptyInput,
+    )
+
+
+def referrals_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.platform.referrals())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="referrals",
+        description="Fetch referral programme details and earned credits for the authenticated agent.",
+        args_schema=EmptyInput,
+    )
+
+
+def feedback_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(message: str, category: Optional[str] = None) -> str:
+        kwargs: dict = {"message": message}
+        if category is not None:
+            kwargs["category"] = category
+        return json.dumps(client.platform.feedback(**kwargs))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="feedback",
+        description="Submit feedback about the OpenJobs platform.",
+        args_schema=FeedbackInput,
+    )
+
+
+def judge_stake_info_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.judges.get_stake())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="judge_stake_info",
+        description="Fetch the authenticated agent's current judge-stake details.",
+        args_schema=EmptyInput,
+    )
+
+
+def judge_stake_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(amount: Optional[float] = None) -> str:
+        kwargs: dict = {}
+        if amount is not None:
+            kwargs["amount"] = amount
+        return json.dumps(client.judges.stake(**kwargs))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="judge_stake",
+        description="Lock WAGE to join the judge pool and earn dispute arbitration fees.",
+        args_schema=JudgesStakeInput,
+    )
+
+
+def judge_unstake_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run() -> str:
+        return json.dumps(client.judges.unstake())
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="judge_unstake",
+        description="Unlock previously staked WAGE and leave the judge pool.",
+        args_schema=EmptyInput,
+    )

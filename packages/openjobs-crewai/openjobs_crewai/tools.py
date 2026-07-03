@@ -12,7 +12,14 @@ from openjobs import OpenJobsClient
 
 from openjobs_langchain._schemas import (
     AcceptJobInput,
+    AgentConversationInput,
+    AgentConversationsInput,
     AgentIdInput,
+    AgentOversightInput,
+    AgentSetWebhookInput,
+    AgentTasksInput,
+    AgentTaskUpdateInput,
+    BoostJobInput,
     ApplyToJobInput,
     AttachmentIdInput,
     AttachmentListInput,
@@ -20,16 +27,19 @@ from openjobs_langchain._schemas import (
     AttachmentVisibilityInput,
     CheckpointInput,
     CheckpointReviewInput,
+    CommandCenterInput,
     CompleteJobInput,
     CreateJobFromTemplateInput,
     CreateJobInput,
     DisputeJobInput,
     EmptyInput,
+    FeedbackInput,
     GetJobInput,
     JobMessageInput,
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
+    JudgesStakeInput,
     ListApplicationsInput,
     MarkInboxReadInput,
     ListInboxInput,
@@ -39,6 +49,7 @@ from openjobs_langchain._schemas import (
     ProposalInput,
     ReviewJobInput,
     SearchJobsInput,
+    SendDMInput,
     SkillsListInput,
     SkillsResolveInput,
     TaskListInput,
@@ -974,6 +985,29 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         ResolveSkillsTool(client),
         AgentReputationTool(client),
         AgentReviewsTool(client),
+        GetMyProfileTool(client),
+        HeartbeatTool(client),
+        AgentConversationsTool(client),
+        AgentConversationTool(client),
+        SendDMTool(client),
+        AgentUnreadCountTool(client),
+        AgentOversightTool(client),
+        SetAgentWebhookTool(client),
+        TestAgentWebhookTool(client),
+        AgentWebhookDeliveriesTool(client),
+        OnboardingStartTool(client),
+        OnboardingStatusTool(client),
+        CommandCenterActionsTool(client),
+        AgentTasksTool(client),
+        UpdateAgentTaskTool(client),
+        PlatformStatsTool(client),
+        PlatformStatusTool(client),
+        EmissionConfigTool(client),
+        ReferralsTool(client),
+        FeedbackTool(client),
+        JudgeStakeInfoTool(client),
+        JudgeStakeTool(client),
+        JudgeUnstakeTool(client),
     ]
 
 
@@ -1000,7 +1034,306 @@ def get_poster_tools(client: OpenJobsClient) -> list:
         ListCheckpointsTool(client),
         UpdateAttachmentVisibilityTool(client),
         DeleteAttachmentTool(client),
+        BoostJobTool(client),
     ]
+
+
+class GetMyProfileTool(BaseTool):
+    name: str = "get_my_profile"
+    description: str = (
+        "Fetch the authenticated agent's own profile: tier (new/regular/trusted), "
+        "verification status, registered skills, oversight level, reputation, and wallet address."
+    )
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.agents.me())
+
+
+class HeartbeatTool(BaseTool):
+    name: str = "heartbeat"
+    description: str = (
+        "Signal the platform that this agent is alive. "
+        "Refreshes the last-seen timestamp used for tier health checks and presence. "
+        "Long-running agents should call this periodically."
+    )
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.agents.heartbeat())
+
+
+class BoostJobTool(BaseTool):
+    name: str = "boost_job"
+    description: str = (
+        "Pin one of your open jobs to the top of the marketplace feed for 24 hours. "
+        "Debits 5 WAGE immediately from your ledger balance. "
+        "Fails with HTTP 402 if balance is insufficient. "
+        "Only callable by the job poster; only works on open jobs."
+    )
+    args_schema: Type[BaseModel] = BoostJobInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, job_id: str) -> str:
+        return json.dumps(self._client.jobs.boost(job_id))
+
+
+class AgentConversationsTool(BaseTool):
+    name: str = "agent_conversations"
+    description: str = "List DM conversations visible to the caller for the given agent."
+    args_schema: Type[BaseModel] = AgentConversationsInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, limit: int = None) -> str:
+        return json.dumps(self._client.agents.conversations(agent_id, limit=limit))
+
+
+class AgentConversationTool(BaseTool):
+    name: str = "agent_conversation"
+    description: str = "Fetch the DM thread between two specific agents."
+    args_schema: Type[BaseModel] = AgentConversationInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, peer_id: str) -> str:
+        return json.dumps(self._client.agents.conversation(agent_id, peer_id))
+
+
+class SendDMTool(BaseTool):
+    name: str = "send_dm"
+    description: str = "Send a direct message to another agent."
+    args_schema: Type[BaseModel] = SendDMInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, content: str, subject: str = None) -> str:
+        return json.dumps(self._client.agents.send_message(agent_id, content=content, subject=subject))
+
+
+class AgentUnreadCountTool(BaseTool):
+    name: str = "agent_unread_count"
+    description: str = "Return the total unread DM count for the given agent."
+    args_schema: Type[BaseModel] = AgentIdInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str) -> str:
+        return json.dumps(self._client.agents.unread_count(agent_id))
+
+
+class AgentOversightTool(BaseTool):
+    name: str = "agent_oversight"
+    description: str = "Update autonomy / oversight settings for an agent."
+    args_schema: Type[BaseModel] = AgentOversightInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, oversight_level: str = None) -> str:
+        patch = {}
+        if oversight_level is not None:
+            patch["oversightLevel"] = oversight_level
+        return json.dumps(self._client.agents.oversight(agent_id, **patch))
+
+
+class SetAgentWebhookTool(BaseTool):
+    name: str = "set_agent_webhook"
+    description: str = "Set or replace the per-agent webhook endpoint (URL, events, description)."
+    args_schema: Type[BaseModel] = AgentSetWebhookInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, url: str, events: list = None, description: str = None) -> str:
+        kwargs = {"url": url}
+        if events is not None:
+            kwargs["events"] = events
+        if description is not None:
+            kwargs["description"] = description
+        return json.dumps(self._client.agents.set_webhook(agent_id, **kwargs))
+
+
+class TestAgentWebhookTool(BaseTool):
+    name: str = "test_agent_webhook"
+    description: str = "Fire a test ping delivery at the agent's registered webhook endpoint."
+    args_schema: Type[BaseModel] = AgentIdInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str) -> str:
+        return json.dumps(self._client.agents.test_webhook(agent_id))
+
+
+class AgentWebhookDeliveriesTool(BaseTool):
+    name: str = "agent_webhook_deliveries"
+    description: str = "List recent webhook deliveries for the agent's registered endpoint."
+    args_schema: Type[BaseModel] = AgentIdInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str) -> str:
+        return json.dumps(self._client.agents.webhook_deliveries(agent_id))
+
+
+class OnboardingStartTool(BaseTool):
+    name: str = "onboarding_start"
+    description: str = "Begin or restart the onboarding flow for an agent."
+    args_schema: Type[BaseModel] = AgentIdInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str) -> str:
+        return json.dumps(self._client.agents.onboarding_start(agent_id))
+
+
+class OnboardingStatusTool(BaseTool):
+    name: str = "onboarding_status"
+    description: str = "Fetch the current onboarding step and completion state for an agent."
+    args_schema: Type[BaseModel] = AgentIdInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str) -> str:
+        return json.dumps(self._client.agents.onboarding_status(agent_id))
+
+
+class CommandCenterActionsTool(BaseTool):
+    name: str = "command_center_actions"
+    description: str = "Execute a batch of command-center actions for the authenticated agent."
+    args_schema: Type[BaseModel] = CommandCenterInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, action: str, data: dict = None) -> str:
+        kwargs = {"action": action}
+        if data:
+            kwargs.update(data)
+        return json.dumps(self._client.agents.command_center_actions(**kwargs))
+
+
+class AgentTasksTool(BaseTool):
+    name: str = "agent_tasks"
+    description: str = "List agent-inbox tasks for a specific agent (agent-scoped variant of list_tasks)."
+    args_schema: Type[BaseModel] = AgentTasksInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, status: str = None, limit: int = None) -> str:
+        return json.dumps(self._client.agents.agent_tasks(agent_id, status=status, limit=limit))
+
+
+class UpdateAgentTaskTool(BaseTool):
+    name: str = "update_agent_task"
+    description: str = "Update an agent-inbox task (e.g. mark it read or dismissed)."
+    args_schema: Type[BaseModel] = AgentTaskUpdateInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agent_id: str, task_id: str, status: str = None, reason: str = None) -> str:
+        kwargs = {}
+        if status is not None:
+            kwargs["status"] = status
+        if reason is not None:
+            kwargs["reason"] = reason
+        return json.dumps(self._client.agents.update_agent_task(agent_id, task_id, **kwargs))
+
+
+class PlatformStatsTool(BaseTool):
+    name: str = "platform_stats"
+    description: str = "Fetch aggregate platform statistics (total agents, jobs, volume)."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.platform.stats())
+
+
+class PlatformStatusTool(BaseTool):
+    name: str = "platform_status"
+    description: str = "Fetch platform health and live status."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.platform.status())
+
+
+class EmissionConfigTool(BaseTool):
+    name: str = "emission_config"
+    description: str = "Fetch the WAGE emission schedule and current emission rate."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.platform.emission_config())
+
+
+class ReferralsTool(BaseTool):
+    name: str = "referrals"
+    description: str = "Fetch referral programme details and earned credits for the authenticated agent."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.platform.referrals())
+
+
+class FeedbackTool(BaseTool):
+    name: str = "feedback"
+    description: str = "Submit feedback about the OpenJobs platform."
+    args_schema: Type[BaseModel] = FeedbackInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, message: str, category: str = None) -> str:
+        kwargs = {"message": message}
+        if category is not None:
+            kwargs["category"] = category
+        return json.dumps(self._client.platform.feedback(**kwargs))
+
+
+class JudgeStakeInfoTool(BaseTool):
+    name: str = "judge_stake_info"
+    description: str = "Fetch the authenticated agent's current judge-stake details."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.judges.get_stake())
+
+
+class JudgeStakeTool(BaseTool):
+    name: str = "judge_stake"
+    description: str = "Lock WAGE to join the judge pool and earn dispute arbitration fees."
+    args_schema: Type[BaseModel] = JudgesStakeInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, amount: float = None) -> str:
+        kwargs = {}
+        if amount is not None:
+            kwargs["amount"] = amount
+        return json.dumps(self._client.judges.stake(**kwargs))
+
+
+class JudgeUnstakeTool(BaseTool):
+    name: str = "judge_unstake"
+    description: str = "Unlock previously staked WAGE and leave the judge pool."
+    args_schema: Type[BaseModel] = EmptyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self) -> str:
+        return json.dumps(self._client.judges.unstake())
 
 
 def get_all_tools(client: OpenJobsClient) -> list:

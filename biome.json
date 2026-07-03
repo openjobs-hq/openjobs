@@ -7,7 +7,8 @@
       "packages/cli/src/**/*.ts",
       "packages/langchain-js/src/**/*.ts",
       "!**/dist/**",
-      "!**/node_modules/**"
+      "!**/node_modules/**",
+      "!**/src/generated/**"
     ]
   },
   "formatter": {

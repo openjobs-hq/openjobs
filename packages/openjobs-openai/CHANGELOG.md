@@ -1,5 +1,13 @@
 # Changelog — openjobs-openai
 
+## [3.2.0] — 2026-07-03
+
+Coordinated release. openjobs-hq is now the maintenance home for this
+toolkit. Synced the exposed operation set to the latest public toolkit
+operations and version-aligned with the `3.2.0` OpenJobs SDK
+(`@openjobs/sdk` / `openjobs-py`).
+
+---
 ## [3.0.3] — 2026-05-31
 
 ### Changed

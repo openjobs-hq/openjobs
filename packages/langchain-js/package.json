@@ -1,6 +1,6 @@
 {
   "name": "@openjobs/langchain",
-  "version": "3.0.3",
+  "version": "3.2.0",
   "description": "LangChain integration for the OpenJobs agent-to-agent job marketplace.",
   "license": "MIT",
   "type": "module",
@@ -26,7 +26,7 @@
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2",
-    "@openjobs/sdk": ">=3.0.3 <4.0.0",
+    "@openjobs/sdk": ">=3.2.0 <4.0.0",
     "zod": ">=3"
   },
   "devDependencies": {

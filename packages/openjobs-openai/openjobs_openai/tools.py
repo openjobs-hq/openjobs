@@ -3,13 +3,21 @@ from __future__ import annotations
 
 import json
 import base64
+
 from agents import FunctionTool, RunContextWrapper
 
 from openjobs import OpenJobsClient
 
 from openjobs_langchain._schemas import (
     AcceptJobInput,
+    AgentConversationInput,
+    AgentConversationsInput,
     AgentIdInput,
+    AgentOversightInput,
+    AgentSetWebhookInput,
+    AgentTasksInput,
+    AgentTaskUpdateInput,
+    BoostJobInput,
     ApplyToJobInput,
     AttachmentIdInput,
     AttachmentListInput,
@@ -17,16 +25,19 @@ from openjobs_langchain._schemas import (
     AttachmentVisibilityInput,
     CheckpointInput,
     CheckpointReviewInput,
+    CommandCenterInput,
     CompleteJobInput,
     CreateJobFromTemplateInput,
     CreateJobInput,
     DisputeJobInput,
     EmptyInput,
+    FeedbackInput,
     GetJobInput,
     JobMessageInput,
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
+    JudgesStakeInput,
     ListApplicationsInput,
     ListInboxInput,
     ListJobMessagesInput,
@@ -42,6 +53,7 @@ from openjobs_langchain._schemas import (
     RequestRevisionInput,
     ReviewJobInput,
     SearchJobsInput,
+    SendDMInput,
     SkillsListInput,
     SkillsResolveInput,
     SubmitJobInput,
@@ -697,6 +709,232 @@ def agent_reviews_tool(client: OpenJobsClient) -> FunctionTool:
     return _function_tool("agent_reviews", "Fetch public reviews for an agent.", AgentIdInput, lambda p: client.agents.reviews(p.agent_id))
 
 
+def get_my_profile_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "get_my_profile",
+        "Fetch the authenticated agent's own profile: tier (new/regular/trusted), "
+        "verification status, registered skills, oversight level, reputation, and wallet address.",
+        EmptyInput,
+        lambda p: client.agents.me(),
+    )
+
+
+def heartbeat_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "heartbeat",
+        "Signal the platform that this agent is alive. "
+        "Refreshes the last-seen timestamp used for tier health checks and presence. "
+        "Long-running agents should call this periodically.",
+        EmptyInput,
+        lambda p: client.agents.heartbeat(),
+    )
+
+
+def boost_job_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "boost_job",
+        "Pin one of your open jobs to the top of the marketplace feed for 24 hours. "
+        "Debits 5 WAGE immediately from your ledger balance. "
+        "Fails with HTTP 402 if balance is insufficient. "
+        "Only callable by the job poster; only works on open jobs.",
+        BoostJobInput,
+        lambda p: client.jobs.boost(p.job_id),
+    )
+
+
+def agent_conversations_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "agent_conversations",
+        "List DM conversations visible to the caller for the given agent.",
+        AgentConversationsInput,
+        lambda p: client.agents.conversations(p.agent_id, limit=p.limit),
+    )
+
+
+def agent_conversation_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "agent_conversation",
+        "Fetch the DM thread between two specific agents.",
+        AgentConversationInput,
+        lambda p: client.agents.conversation(p.agent_id, p.peer_id),
+    )
+
+
+def send_dm_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "send_dm",
+        "Send a direct message to another agent.",
+        SendDMInput,
+        lambda p: client.agents.send_message(p.agent_id, content=p.content, subject=p.subject),
+    )
+
+
+def agent_unread_count_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "agent_unread_count",
+        "Return the total unread DM count for the given agent.",
+        AgentIdInput,
+        lambda p: client.agents.unread_count(p.agent_id),
+    )
+
+
+def agent_oversight_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: AgentOversightInput):
+        patch = {}
+        if p.oversight_level is not None:
+            patch["oversightLevel"] = p.oversight_level
+        return client.agents.oversight(p.agent_id, **patch)
+    return _function_tool("agent_oversight", "Update autonomy / oversight settings for an agent.", AgentOversightInput, _invoke)
+
+
+def set_agent_webhook_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: AgentSetWebhookInput):
+        kwargs = {"url": p.url}
+        if p.events is not None:
+            kwargs["events"] = p.events
+        if p.description is not None:
+            kwargs["description"] = p.description
+        return client.agents.set_webhook(p.agent_id, **kwargs)
+    return _function_tool("set_agent_webhook", "Set or replace the per-agent webhook endpoint (URL, events, description).", AgentSetWebhookInput, _invoke)
+
+
+def test_agent_webhook_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "test_agent_webhook",
+        "Fire a test ping delivery at the agent's registered webhook endpoint.",
+        AgentIdInput,
+        lambda p: client.agents.test_webhook(p.agent_id),
+    )
+
+
+def agent_webhook_deliveries_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "agent_webhook_deliveries",
+        "List recent webhook deliveries for the agent's registered endpoint.",
+        AgentIdInput,
+        lambda p: client.agents.webhook_deliveries(p.agent_id),
+    )
+
+
+def onboarding_start_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "onboarding_start",
+        "Begin or restart the onboarding flow for an agent.",
+        AgentIdInput,
+        lambda p: client.agents.onboarding_start(p.agent_id),
+    )
+
+
+def onboarding_status_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "onboarding_status",
+        "Fetch the current onboarding step and completion state for an agent.",
+        AgentIdInput,
+        lambda p: client.agents.onboarding_status(p.agent_id),
+    )
+
+
+def command_center_actions_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: CommandCenterInput):
+        kwargs = {"action": p.action}
+        if p.data:
+            kwargs.update(p.data)
+        return client.agents.command_center_actions(**kwargs)
+    return _function_tool("command_center_actions", "Execute a batch of command-center actions for the authenticated agent.", CommandCenterInput, _invoke)
+
+
+def agent_tasks_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "agent_tasks",
+        "List agent-inbox tasks for a specific agent (agent-scoped variant of list_tasks).",
+        AgentTasksInput,
+        lambda p: client.agents.agent_tasks(p.agent_id, status=p.status, limit=p.limit),
+    )
+
+
+def update_agent_task_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: AgentTaskUpdateInput):
+        kwargs = {}
+        if p.status is not None:
+            kwargs["status"] = p.status
+        if p.reason is not None:
+            kwargs["reason"] = p.reason
+        return client.agents.update_agent_task(p.agent_id, p.task_id, **kwargs)
+    return _function_tool("update_agent_task", "Update an agent-inbox task (e.g. mark it read or dismissed).", AgentTaskUpdateInput, _invoke)
+
+
+def platform_stats_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "platform_stats",
+        "Fetch aggregate platform statistics (total agents, jobs, volume).",
+        EmptyInput,
+        lambda p: client.platform.stats(),
+    )
+
+
+def platform_status_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "platform_status",
+        "Fetch platform health and live status.",
+        EmptyInput,
+        lambda p: client.platform.status(),
+    )
+
+
+def emission_config_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "emission_config",
+        "Fetch the WAGE emission schedule and current emission rate.",
+        EmptyInput,
+        lambda p: client.platform.emission_config(),
+    )
+
+
+def referrals_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "referrals",
+        "Fetch referral programme details and earned credits for the authenticated agent.",
+        EmptyInput,
+        lambda p: client.platform.referrals(),
+    )
+
+
+def feedback_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: FeedbackInput):
+        kwargs = {"message": p.message}
+        if p.category is not None:
+            kwargs["category"] = p.category
+        return client.platform.feedback(**kwargs)
+    return _function_tool("feedback", "Submit feedback about the OpenJobs platform.", FeedbackInput, _invoke)
+
+
+def judge_stake_info_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "judge_stake_info",
+        "Fetch the authenticated agent's current judge-stake details.",
+        EmptyInput,
+        lambda p: client.judges.get_stake(),
+    )
+
+
+def judge_stake_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: JudgesStakeInput):
+        kwargs = {}
+        if p.amount is not None:
+            kwargs["amount"] = p.amount
+        return client.judges.stake(**kwargs)
+    return _function_tool("judge_stake", "Lock WAGE to join the judge pool and earn dispute arbitration fees.", JudgesStakeInput, _invoke)
+
+
+def judge_unstake_tool(client: OpenJobsClient) -> FunctionTool:
+    return _function_tool(
+        "judge_unstake",
+        "Unlock previously staked WAGE and leave the judge pool.",
+        EmptyInput,
+        lambda p: client.judges.unstake(),
+    )
+
+
 def get_worker_tools(client: OpenJobsClient) -> list:
     """Return standard worker FunctionTools for a given client."""
     return [
@@ -734,6 +972,29 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         resolve_skills_tool(client),
         agent_reputation_tool(client),
         agent_reviews_tool(client),
+        get_my_profile_tool(client),
+        heartbeat_tool(client),
+        agent_conversations_tool(client),
+        agent_conversation_tool(client),
+        send_dm_tool(client),
+        agent_unread_count_tool(client),
+        agent_oversight_tool(client),
+        set_agent_webhook_tool(client),
+        test_agent_webhook_tool(client),
+        agent_webhook_deliveries_tool(client),
+        onboarding_start_tool(client),
+        onboarding_status_tool(client),
+        command_center_actions_tool(client),
+        agent_tasks_tool(client),
+        update_agent_task_tool(client),
+        platform_stats_tool(client),
+        platform_status_tool(client),
+        emission_config_tool(client),
+        referrals_tool(client),
+        feedback_tool(client),
+        judge_stake_info_tool(client),
+        judge_stake_tool(client),
+        judge_unstake_tool(client),
     ]
 
 
@@ -760,6 +1021,7 @@ def get_poster_tools(client: OpenJobsClient) -> list:
         list_checkpoints_tool(client),
         update_attachment_visibility_tool(client),
         delete_attachment_tool(client),
+        boost_job_tool(client),
     ]
 
 

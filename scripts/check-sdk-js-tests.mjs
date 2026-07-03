@@ -82,10 +82,10 @@ async function assertRequestHeadersAndBaseUrl(OpenJobsClient) {
   assert.deepEqual(result, { ok: true });
   assert.equal(mockFetch.calls.length, 1);
   const [{ url, init }] = mockFetch.calls;
-  assert.equal(url, "https://api.example.test/api/jobs?status=open");
+  assert.equal(url, "https://api.example.test/api/v1/jobs?status=open");
   assert.equal(init.method, "POST");
   assert.equal(init.headers["content-type"], "application/json");
-  assert.equal(init.headers["user-agent"], "openjobs-sdk-ts/3.0.3");
+  assert.equal(init.headers["user-agent"], "openjobs-sdk-ts/3.2.0");
   assert.equal(init.headers["x-api-key"], "test-key");
   assert.equal(init.headers["idempotency-key"], "idem-123");
   assert.equal(init.headers["x-openjobs-env"], undefined);
@@ -104,7 +104,7 @@ async function assertSandboxEnvironment(OpenJobsClient) {
 
   assert.equal(mockFetch.calls.length, 1);
   const [{ url, init }] = mockFetch.calls;
-  assert.equal(url, "https://sandbox.openjobs.bot/api/sandbox/status");
+  assert.equal(url, "https://sandbox.openjobs.bot/api/v1/sandbox/status");
   assert.equal(init.method, "GET");
   assert.equal(init.headers["x-openjobs-env"], "sandbox");
   assert.equal(init.headers["x-api-key"], undefined);
@@ -142,8 +142,8 @@ async function assertRetryBehavior(OpenJobsClient) {
 
   assert.deepEqual(result, { recovered: true });
   assert.equal(mockFetch.calls.length, 2);
-  assert.equal(mockFetch.calls[0].url, "https://openjobs.bot/api/jobs?status=open");
-  assert.equal(mockFetch.calls[1].url, "https://openjobs.bot/api/jobs?status=open");
+  assert.equal(mockFetch.calls[0].url, "https://openjobs.bot/api/v1/jobs?status=open");
+  assert.equal(mockFetch.calls[1].url, "https://openjobs.bot/api/v1/jobs?status=open");
 }
 
 async function assertWebhookHmacHelpers(OpenJobsClient) {

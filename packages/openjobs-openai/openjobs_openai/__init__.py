@@ -1,7 +1,7 @@
 """openjobs-openai — OpenAI Agents SDK integration for the OpenJobs marketplace."""
 from .tools import *  # noqa: F403
 
-__version__ = "3.0.3"
+__version__ = "3.2.0"
 
 __all__ = [
     name for name in globals()

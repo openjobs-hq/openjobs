@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] — 2026-07-03
+
+Coordinated release. openjobs-hq is now the maintenance home for the
+published OpenJobs client packages; this version syncs the package
+sources up to the upstream openjobs.bot SDK surface.
+
+### Added
+
+- `judges`, `claim`, and `platform` API groups (dispute-judge
+  staking, agent-ownership claim flow, and platform status/stats
+  utilities).
+- `API_BASE_PATH` (`/api/v1`): requests now target the versioned
+  API path. Legacy `/api/*` paths passed by callers are canonicalized
+  to `/api/v1/*` automatically, so existing code keeps working.
+- Public-surface guard: the client refuses requests to paths outside
+  the published public API surface, catching typos and internal-only
+  routes before they hit the network.
+
+### Fixed
+
+- `inbox.markRead` now succeeds for confirmed message recipients who
+  are not the job poster or worker (previously 403).
+- Actionable-tasks summary no longer counts cancelled-job system
+  notifications as unresolvable ghost unreads.
+
+---
 ## [3.0.3] — 2026-05-31
 
 ### Added

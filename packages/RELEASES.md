@@ -5,14 +5,17 @@ OpenJobs client SDKs. Each entry lists the registry URL, artifact
 hashes (so consumers can verify they're pulling the bytes we
 shipped), and the upload timestamp returned by the registry.
 
-Cut new releases from CI by pushing a tag like `sdk-v1.0.1` (or by
-running the **Release SDKs** workflow from the GitHub Actions UI and
-picking a version + target). Put the tag on a commit that already has
-the matching per-package changelog entries and any release-prep source
-metadata you want preserved in git. The workflow lives at
+Cut new releases from CI by running the **Release SDKs** workflow from
+the GitHub Actions UI and picking a version + target. This
+`workflow_dispatch` run is the only CI publish path; pushing a git tag
+does not trigger a release in this repository, and no new tag- or
+push-triggered publish workflow should be added, because it would
+bypass the release-owner controls described below. Run the workflow
+from a commit that already has the matching per-package changelog
+entries. The workflow lives at
 [`.github/workflows/release-sdks.yml`](../.github/workflows/release-sdks.yml)
 and invokes [`./packages/release.sh <version>`](./release.sh) using
-repository secrets — no developer machine setup required, and every
+publish secrets — no developer machine setup required, and every
 published artifact is provably built from a known commit.
 
 Running [`./packages/release.sh <version>`](./release.sh) locally remains
@@ -28,6 +31,55 @@ also require the matching `openjobs-langchain` line), while
 `@openjobs/langchain` requires `@openjobs/sdk >=<version> <next-major>.0.0`.
 Because npm and PyPI package metadata is immutable after publication,
 fixing a bad dependency range requires a new patch release.
+
+## Release ownership
+
+Publishing the OpenJobs packages to npm and PyPI is restricted to the
+release owner, **@cchacons**. Two independent controls enforce this:
+
+1. **Workflow actor guard (in code).** The **Release SDKs** workflow
+   fails immediately on any real publish (`dry_run=false`) unless the
+   person who started the run is `@cchacons`. Anyone may run the
+   workflow with `dry_run=true` to build and validate the packages, but
+   only the owner can publish. See the "Restrict real publishing to the
+   release owner" step in
+   [`.github/workflows/release-sdks.yml`](../.github/workflows/release-sdks.yml).
+
+2. **Protected `release` environment (recommended, tamper-proof).**
+   Real publishes run through a GitHub Environment named `release`. The
+   actor guard above can in principle be bypassed by editing the
+   workflow on a branch; the environment cannot. To make this control
+   effective, the owner must configure it once in
+   **repo Settings > Environments > `release`**:
+   - Add `@cchacons` as a **required reviewer** (every real publish then
+     waits for the owner's approval before any package is pushed).
+   - Move `NPM_TOKEN`, `PYPI_API_TOKEN`, and the per-integration PyPI
+     tokens from repository secrets into this environment's secrets, so
+     the publish tokens are unreachable outside an owner-approved run.
+
+   Dry runs skip the environment entirely, so contributors can keep
+   validating packaging without owner involvement.
+
+3. **Code-owner review on every merge.**
+   [`.github/CODEOWNERS`](../.github/CODEOWNERS) assigns ownership of
+   the whole repository to `@cchacons`. For this to gate merges, the
+   owner must enable branch protection on `main` once, in
+   **repo Settings > Branches > Add branch protection rule**:
+   - Require a pull request before merging.
+   - Require review from Code Owners.
+   - Require status checks to pass (select the CI and security jobs).
+   - Do not allow bypassing the above settings.
+
+   With this in place, no change to the release workflow, the release
+   script, package manifests, or any source can reach `main` (and
+   therefore a release) without the owner's approval.
+
+The npm and PyPI publish tokens must be held only by the release owner.
+Do not add them as plain repository secrets accessible to other
+workflows once the protected environment is configured. Local runs of
+`./packages/release.sh` publish with whatever tokens the machine has;
+that fallback is safe only because the tokens themselves stay with the
+release owner.
 
 Append an entry below for every release (regardless of how it was
 cut).

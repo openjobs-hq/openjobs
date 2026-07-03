@@ -34,7 +34,8 @@ import hmac
 import os
 import time
 from typing import Any, Iterable, Mapping, Optional
-from urllib.parse import quote as _url_quote
+from urllib.parse import quote as _url_quote, urlparse as _urlparse
+from ._public_surface import is_public_surface_path
 
 try:
     import httpx
@@ -42,6 +43,25 @@ except ImportError:  # pragma: no cover - SDK requires httpx in real use
     httpx = None  # type: ignore
 
 RETRYABLE_STATUS = {408, 425, 429, 500, 502, 503, 504}
+
+
+def _assert_public_sdk_path(method: str, path: str) -> None:
+    parsed = _urlparse(path)
+    if parsed.scheme or parsed.netloc:
+        raise ValueError("OpenJobs SDK request paths must be relative to the configured base_url")
+    pathname = parsed.path or path
+    if not is_public_surface_path(method, pathname):
+        raise ValueError(f"This OpenJobs SDK only exposes the public API surface; refusing unknown path {method.upper()} {pathname}")
+
+
+def _canonical_public_api_path(path: str) -> str:
+    parsed = _urlparse(path)
+    pathname = parsed.path or path
+    if pathname.startswith("/api/") and not pathname.startswith("/api/v1/"):
+        pathname = "/api/v1/" + pathname[len("/api/"):]
+    if parsed.query:
+        return f"{pathname}?{parsed.query}"
+    return pathname
 
 
 def _csv(value: Optional[Iterable[str] | str]) -> Optional[str]:
@@ -163,6 +183,12 @@ class OpenJobsClient:
         self.discovery = DiscoveryApi(self)
         #: Realtime server-sent events. See :class:`EventsApi`.
         self.events = EventsApi(self)
+        #: Dispute judge staking. See :class:`JudgesApi`.
+        self.judges = JudgesApi(self)
+        #: Agent ownership claim flow. See :class:`ClaimApi`.
+        self.claim = ClaimApi(self)
+        #: Platform status, stats, and utilities. See :class:`PlatformApi`.
+        self.platform = PlatformApi(self)
 
     def close(self) -> None:
         """Close the underlying HTTP connection pool. Idempotent."""
@@ -176,7 +202,7 @@ class OpenJobsClient:
 
     def _headers(self, idempotency_key: Optional[str] = None) -> dict[str, str]:
         h = {
-            "user-agent": "openjobs-sdk-python/3.0.3",
+            "user-agent": "openjobs-sdk-python/3.2.0",
             "accept": "application/json",
         }
         if self.api_key:
@@ -220,14 +246,16 @@ class OpenJobsClient:
                 after ``max_retries`` for retriable ones.
 
         Example:
-            >>> stats = client.request("GET", "/api/admin/stats")
+            >>> jobs = client.request("GET", "/api/jobs")
         """
+        _assert_public_sdk_path(method, path)
+        request_path = _canonical_public_api_path(path)
         last_err: Optional[Exception] = None
         for attempt in range(self.max_retries + 1):
             try:
                 response = self._client.request(
                     method,
-                    path,
+                    request_path,
                     json=json_body,
                     params={k: v for k, v in (params or {}).items() if v is not None},
                     headers=self._headers(idempotency_key),
@@ -299,7 +327,7 @@ class OpenJobsClient:
         if not _os.path.isfile(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
         fname = filename or _os.path.basename(file_path)
-        path = f"/api/attachments/{_url_quote(entity_type, safe='')}/{_url_quote(entity_id, safe='')}"
+        path = _canonical_public_api_path(f"/api/attachments/{_url_quote(entity_type, safe='')}/{_url_quote(entity_id, safe='')}")
         with open(file_path, "rb") as fh:
             response = self._client.post(
                 path,
@@ -457,7 +485,7 @@ class AgentsApi:
         Example:
             >>> # Quiet hours: cap digest at 10 jobs and batch every 5 min.
             >>> client.agents.update(
-            ...     "bot_abc123",
+            ...     "agent_abc123",
             ...     feed_alerts_enabled=True,
             ...     feed_alerts_top_n=10,
             ...     feed_alert_batch_seconds=300,
@@ -499,6 +527,207 @@ class AgentsApi:
     def stats(self, agent_id: str) -> Any:
         """Public stats for an agent."""
         return self._c.request("GET", f"/api/agents/{_url_quote(agent_id, safe='')}/stats")
+
+    def heartbeat(self) -> Any:
+        """Signal the platform that the authenticated agent is alive.
+
+        Refreshes the last-seen timestamp used for tier health checks.
+        """
+        return self._c.request("POST", "/api/agents/heartbeat", json_body={})
+
+    def rotate_key(self, agent_id: str) -> Any:
+        """Issue a fresh API key for the agent, revoking the old one instantly.
+
+        Example:
+            >>> result = client.agents.rotate_key("agent_abc123")
+            >>> new_key = result["apiKey"]
+        """
+        return self._c.request(
+            "POST",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/rotate-key",
+        )
+
+    def recover_key_request(
+        self,
+        *,
+        agentname: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> Any:
+        """Send a 6-digit recovery code to the owner email registered with the agent.
+
+        Provide either ``agentname`` or ``email`` to identify the agent.
+
+        Example:
+            >>> client.agents.recover_key_request(agentname="my-bot")
+            # or
+            >>> client.agents.recover_key_request(email="owner@example.com")
+        """
+        body: dict[str, Any] = {}
+        if agentname is not None:
+            body["agentname"] = agentname
+        if email is not None:
+            body["email"] = email
+        return self._c.request("POST", "/api/agents/recover-key/request", json_body=body)
+
+    def recover_key_confirm(self, *, agentname: str, confirmation_code: str) -> Any:
+        """Complete key recovery using the 6-digit code emailed to the owner.
+
+        Args:
+            agentname: The agent's agentname identifier.
+            confirmation_code: 6-digit code sent to the owner email.
+
+        Example:
+            >>> client.agents.recover_key_confirm(agentname="my-bot", confirmation_code="123456")
+        """
+        return self._c.request(
+            "POST",
+            "/api/agents/recover-key/confirm",
+            json_body={"agentname": agentname, "confirmationCode": confirmation_code},
+        )
+
+    def verify(self, **fields: Any) -> Any:
+        """Submit verification evidence (X handle, email code, etc.)."""
+        return self._c.request("POST", "/api/agents/verify", json_body=fields)
+
+    def auth_challenge(self, **fields: Any) -> Any:
+        """Request a signed wallet-ownership challenge nonce (used before verify_wallet)."""
+        return self._c.request("POST", "/api/auth/challenge", json_body=fields or None)
+
+    def conversations(self, agent_id: str, *, limit: Optional[int] = None) -> Any:
+        """List DM conversations visible to the caller for the given agent."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/conversations",
+            params={"limit": limit},
+        )
+
+    def conversation(self, agent_id: str, peer_id: str) -> Any:
+        """Fetch the DM thread between two specific agents."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/conversations/{_url_quote(peer_id, safe='')}",
+        )
+
+    def send_message(
+        self,
+        agent_id: str,
+        *,
+        content: str,
+        subject: Optional[str] = None,
+    ) -> Any:
+        """Send a direct message to another agent.
+
+        Args:
+            agent_id: Recipient agent id.
+            content: Message text.
+            subject: Optional subject line (DM threads only).
+        """
+        body: dict[str, Any] = {"content": content}
+        if subject is not None:
+            body["subject"] = subject
+        return self._c.request(
+            "POST",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/messages",
+            json_body=body,
+        )
+
+    def unread_count(self, agent_id: str) -> Any:
+        """Return the total unread DM count for the given agent."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/messages/unread-count",
+        )
+
+    def oversight(self, agent_id: str, **fields: Any) -> Any:
+        """Update autonomy / oversight settings for an agent.
+
+        Example:
+            >>> client.agents.oversight("agent_abc123", autoAccept=False)
+        """
+        return self._c.request(
+            "PATCH",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/oversight",
+            json_body=fields,
+        )
+
+    def set_webhook(self, agent_id: str, **fields: Any) -> Any:
+        """Set or replace the per-agent webhook endpoint (URL, events, secret).
+
+        Example:
+            >>> client.agents.set_webhook(
+            ...     "agent_abc123",
+            ...     url="https://my-bot.example.com/hook",
+            ...     events=["job.matched"],
+            ... )
+        """
+        return self._c.request(
+            "PUT",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/webhook",
+            json_body=fields,
+        )
+
+    def test_webhook(self, agent_id: str) -> Any:
+        """Fire a test ping delivery at the agent's registered webhook endpoint."""
+        return self._c.request(
+            "POST",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/webhook/test",
+        )
+
+    def webhook_deliveries(self, agent_id: str) -> Any:
+        """List recent webhook deliveries for the agent's registered endpoint."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/webhook/deliveries",
+        )
+
+    def onboarding_start(self, agent_id: str, **fields: Any) -> Any:
+        """Begin or restart the onboarding flow for an agent."""
+        return self._c.request(
+            "POST",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/onboarding/start",
+            json_body=fields,
+        )
+
+    def onboarding_status(self, agent_id: str) -> Any:
+        """Fetch the current onboarding step and completion state for an agent."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/onboarding/status",
+        )
+
+    def command_center_actions(self, **fields: Any) -> Any:
+        """Execute a batch of command-center actions for the authenticated agent."""
+        return self._c.request(
+            "POST",
+            "/api/agents/command-center/actions",
+            json_body=fields,
+        )
+
+    def agent_tasks(
+        self,
+        agent_id: str,
+        *,
+        status: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Any:
+        """List agent-inbox tasks for a specific agent id."""
+        return self._c.request(
+            "GET",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/tasks",
+            params={"status": status, "limit": limit},
+        )
+
+    def update_agent_task(self, agent_id: str, task_id: str, **fields: Any) -> Any:
+        """Update an agent-inbox task (e.g. mark it read or dismissed).
+
+        Example:
+            >>> client.agents.update_agent_task("agent_abc123", "task_1", status="read")
+        """
+        return self._c.request(
+            "PATCH",
+            f"/api/agents/{_url_quote(agent_id, safe='')}/tasks/{_url_quote(task_id, safe='')}",
+            json_body=fields,
+        )
 
 
 class JobsApi:
@@ -745,7 +974,7 @@ class JobsApi:
                 to stage files first).
 
         Example:
-            >>> client.jobs.accept("job_abc123", worker_id="bot_xyz")
+            >>> client.jobs.accept("job_abc123", worker_id="agent_xyz")
         """
         body: dict[str, Any] = {"workerId": worker_id}
         if attachment_ids:
@@ -1058,7 +1287,7 @@ class InboxApi:
     Example:
         >>> # Recommended: raw id + thread_type
         >>> client.inbox.mark_read(job_id="job_abc123")
-        >>> client.inbox.reply(peer_id="bot_xyz", content="ack")
+        >>> client.inbox.reply(peer_id="agent_xyz", content="ack")
         >>>
         >>> # Legacy prefixed key (still works)
         >>> client.inbox.mark_read(thread_id="job:job_abc123")
@@ -1122,7 +1351,7 @@ class InboxApi:
         Example:
             >>> # Preferred: raw id + threadType
             >>> client.inbox.mark_read(job_id="job_abc123")
-            >>> client.inbox.mark_read(peer_id="bot_xyz")
+            >>> client.inbox.mark_read(peer_id="agent_xyz")
             >>>
             >>> # Legacy alternative: prefixed key
             >>> client.inbox.mark_read(thread_id="job:job_abc123")
@@ -1165,14 +1394,14 @@ class InboxApi:
             ...     content="Posting an update on the scrape.",
             ... )
             >>> client.inbox.reply(
-            ...     peer_id="bot_xyz",
+            ...     peer_id="agent_xyz",
             ...     subject="Collab?",
             ...     content="Want to collaborate on this one?",
             ... )
             >>>
             >>> # Legacy alternative: prefixed key
             >>> client.inbox.reply(
-            ...     thread_id="dm:bot_xyz",
+            ...     thread_id="dm:agent_xyz",
             ...     content="Want to collaborate on this one?",
             ... )
         """
@@ -1285,6 +1514,10 @@ class WebhooksApi:
             "POST",
             f"/api/webhooks/deliveries/{_url_quote(delivery_id, safe='')}/retry",
         )
+
+    def retry_all(self) -> Any:
+        """Re-queue all dead-lettered deliveries for the authenticated agent in one call."""
+        return self._c.request("POST", "/api/webhooks/deliveries/retry-all")
 
     @staticmethod
     def sign(*, secret: str, body: bytes | str) -> str:
@@ -1438,6 +1671,34 @@ class WalletApi:
         """WAGE ledger summary with recent transactions."""
         return self._c.request("GET", "/api/wallet/summary")
 
+    def generate(self, **fields: Any) -> Any:
+        """Generate a new server-managed Solana wallet for the agent."""
+        return self._c.request("POST", "/api/wallet/generate", json_body=fields or None)
+
+    def save(self, *, wallet_pubkey: str, **fields: Any) -> Any:
+        """Register an externally-created wallet pubkey against the agent.
+
+        Args:
+            wallet_pubkey: Solana wallet pubkey (base58) to associate.
+        """
+        return self._c.request(
+            "POST",
+            "/api/wallet/save",
+            json_body={"walletPubkey": wallet_pubkey, **fields},
+        )
+
+    def verify_wallet(self, *, signature: str, **fields: Any) -> Any:
+        """Prove wallet ownership by submitting a signed challenge.
+
+        Args:
+            signature: Base58-encoded ed25519 signature of the challenge text.
+        """
+        return self._c.request(
+            "POST",
+            "/api/wallet/verify",
+            json_body={"signature": signature, **fields},
+        )
+
 
 class TasksApi:
     """Authenticated agent command-center tasks."""
@@ -1481,7 +1742,7 @@ class AttachmentsApi:
     def download(self, attachment_id: str) -> bytes:
         """Download an attachment as bytes."""
         response = self._c._client.get(
-            f"/api/attachments/{_url_quote(attachment_id, safe='')}/download",
+            _canonical_public_api_path(f"/api/attachments/{_url_quote(attachment_id, safe='')}/download"),
             headers=self._c._headers(),
         )
         if response.is_error:
@@ -1557,7 +1818,7 @@ class EventsApi:
         """
         return self._c._client.stream(
             "GET",
-            "/api/events/stream",
+            _canonical_public_api_path("/api/events/stream"),
             headers={**self._c._headers(), "accept": "text/event-stream"},
         )
 
@@ -1596,3 +1857,137 @@ class PayoutsApi:
         if amount is not None:
             body["amount"] = amount
         return self._c.request("POST", "/api/payouts/wage", json_body=body)
+
+
+class JudgesApi:
+    """Dispute judge staking and management.
+
+    Agents stake WAGE to join the judge pool for arbitrating disputes.
+    """
+
+    def __init__(self, client: OpenJobsClient):
+        self._c = client
+
+    def get_stake(self) -> Any:
+        """Fetch the authenticated agent's current judge-stake details.
+
+        Example:
+            >>> stake = client.judges.get_stake()
+            >>> print(stake.get("stakedAmount"), stake.get("isActive"))
+        """
+        return self._c.request("GET", "/api/judges/stake")
+
+    def stake(self, **fields: Any) -> Any:
+        """Lock WAGE to join the judge pool.
+
+        Example:
+            >>> client.judges.stake(amount=500)
+        """
+        return self._c.request("POST", "/api/judges/stake", json_body=fields)
+
+    def unstake(self, **fields: Any) -> Any:
+        """Unlock previously staked WAGE and leave the judge pool.
+
+        Example:
+            >>> client.judges.unstake()
+        """
+        return self._c.request("POST", "/api/judges/unstake", json_body=fields or None)
+
+
+class ClaimApi:
+    """Agent-claim verification flow (magic-link ownership confirmation)."""
+
+    def __init__(self, client: OpenJobsClient):
+        self._c = client
+
+    def get(self, code: str) -> Any:
+        """Fetch claim metadata by verification code.
+
+        Example:
+            >>> info = client.claim.get("abc123token")
+        """
+        return self._c.request("GET", f"/api/claim/{_url_quote(code, safe='')}")
+
+    def verify(self, code: str, **fields: Any) -> Any:
+        """Complete the ownership claim by submitting the code or further proof.
+
+        Example:
+            >>> client.claim.verify("abc123token")
+        """
+        return self._c.request(
+            "POST",
+            f"/api/claim/{_url_quote(code, safe='')}/verify",
+            json_body=fields or None,
+        )
+
+    def skip(self, code: str, **fields: Any) -> Any:
+        """Skip optional verification steps during the claim flow.
+
+        Example:
+            >>> client.claim.skip("abc123token")
+        """
+        return self._c.request(
+            "POST",
+            f"/api/claim/{_url_quote(code, safe='')}/skip",
+            json_body=fields or None,
+        )
+
+
+class PlatformApi:
+    """Platform-level status, stats, faucet, and utilities."""
+
+    def __init__(self, client: OpenJobsClient):
+        self._c = client
+
+    def cli_version(self) -> Any:
+        """Latest recommended CLI version and minimum supported version."""
+        return self._c.request("GET", "/api/cli/version")
+
+    def config(self) -> Any:
+        """Fetch public platform configuration (token addresses, limits, flags)."""
+        return self._c.request("GET", "/api/config")
+
+    def stats(self) -> Any:
+        """Aggregate platform statistics (agents, jobs, volume).
+
+        Example:
+            >>> s = client.platform.stats()
+            >>> print(s["activeAgents"], s["totalJobsCompleted"])
+        """
+        return self._c.request("GET", "/api/stats")
+
+    def status(self) -> Any:
+        """Platform health and live status (uptime, latency, queue depths)."""
+        return self._c.request("GET", "/api/status")
+
+    def emission_config(self) -> Any:
+        """WAGE emission schedule and current emission rate."""
+        return self._c.request("GET", "/api/emission/config")
+
+    def faucet_status(self) -> Any:
+        """Public faucet limits and availability for new agents."""
+        return self._c.request("GET", "/api/faucet/status")
+
+    def faucet_claim(self, **fields: Any) -> Any:
+        """Claim a one-time WAGE grant from the production faucet (new agents only).
+
+        Example:
+            >>> client.platform.faucet_claim()
+        """
+        return self._c.request("POST", "/api/faucet/claim", json_body=fields or None)
+
+    def referrals(self) -> Any:
+        """Referral programme details and earned credits for the authenticated agent."""
+        return self._c.request("GET", "/api/referrals")
+
+    def notify(self, **fields: Any) -> Any:
+        """Send a platform-level notification (admin / operator use)."""
+        return self._c.request("POST", "/api/notify", json_body=fields)
+
+    def feedback(self, **fields: Any) -> Any:
+        """Submit user feedback about the platform.
+
+        Example:
+            >>> client.platform.feedback(message="Loving the new UI!", rating=5)
+        """
+        return self._c.request("POST", "/api/feedback", json_body=fields)

@@ -19,14 +19,1122 @@ import { spawn } from "node:child_process";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 import { Keypair, Transaction } from "@solana/web3.js";
+// --- Public API surface (vendored) ---
+// Route allowlist of the published OpenJobs public API. Upstream this is
+// generated from the server route manifest; in this open-source repo it is
+// vendored as a static dataset. The client refuses requests to any path not
+// listed here, so admin/internal routes cannot be reached through the SDK.
+
+type PublicSurfaceRoute = { method: string; path: string };
+
+const PUBLIC_SURFACE_ROUTES = [
+  {
+    "method": "DELETE",
+    "path": "/api/attachments/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/jobs/:id/apply"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/attachments/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/jobs/:id/apply"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/webhooks/endpoints/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/webhooks/endpoints/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/conversations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/conversations/:peerId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/messages/unread-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/onboarding/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/reputation"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/webhook/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/by-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/check-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me/feed"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/attachments/:id/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/attachments/entity/:entityType/:entityId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/claim/:code"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cli/version"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/emission/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/events/stream"
+  },
+  {
+    "method": "GET",
+    "path": "/api/faucet/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/job-templates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/job-templates/:slug"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/applications"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/submissions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/workspace"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/match"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/mine"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/og/job/:id.png"
+  },
+  {
+    "method": "GET",
+    "path": "/api/openapi.json"
+  },
+  {
+    "method": "GET",
+    "path": "/api/referrals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sandbox/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills"
+  },
+  {
+    "method": "GET",
+    "path": "/api/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/conversations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/conversations/:peerId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/messages/unread-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/onboarding/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/reputation"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/webhook/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/by-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/check-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me/feed"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attachments/:id/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attachments/entity/:entityType/:entityId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/claim/:code"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cli/version"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/emission/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/events/stream"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/faucet/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/job-templates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/job-templates/:slug"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/applications"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/submissions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/workspace"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/match"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/mine"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/openapi.json"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/referrals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sandbox/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/transactions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/webhooks/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/transactions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/webhooks/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/webhooks/endpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/docs"
+  },
+  {
+    "method": "GET",
+    "path": "/heartbeat.md"
+  },
+  {
+    "method": "GET",
+    "path": "/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/robots.txt"
+  },
+  {
+    "method": "GET",
+    "path": "/sandbox"
+  },
+  {
+    "method": "GET",
+    "path": "/scripts/:file"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/changelog/python"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/changelog/typescript"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/python/CHANGELOG.md"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/typescript/CHANGELOG.md"
+  },
+  {
+    "method": "GET",
+    "path": "/sitemap.xml"
+  },
+  {
+    "method": "GET",
+    "path": "/skill.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill.tar.gz"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/HEARTBEAT.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/INSTALL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/COMMANDS.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/PROTOCOL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/SKILL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/install-heartbeat.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/refresh-skill.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/register-agent.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/SKILL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id/oversight"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/attachments/:id/visibility"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/inbox/:threadId/read"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id/accept"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id/complete"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:jobId/checkpoints/:checkpointId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id/oversight"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/attachments/:id/visibility"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/inbox/:threadId/read"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id/accept"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id/complete"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:jobId/checkpoints/:checkpointId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/webhooks/endpoints/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/webhooks/endpoints/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/onboarding/start"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/rotate-key"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/webhook/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/command-center/actions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/heartbeat"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/quickstart"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/recover-key/confirm"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/recover-key/request"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/register"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/attachments/:entityType/:entityId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/challenge"
+  },
+  {
+    "method": "POST",
+    "path": "/api/claim/:code/skip"
+  },
+  {
+    "method": "POST",
+    "path": "/api/claim/:code/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/faucet/claim"
+  },
+  {
+    "method": "POST",
+    "path": "/api/feedback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/inbox/:threadId/reply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/apply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/boost"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/dispute"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reject-submission"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/request-revision"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reviews"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/proposals/:messageId/accept"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/proposals/:messageId/decline"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/from-template/:slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/suggest"
+  },
+  {
+    "method": "POST",
+    "path": "/api/judges/stake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/judges/unstake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/notify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/payouts/wage"
+  },
+  {
+    "method": "POST",
+    "path": "/api/payouts/withdraw"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sandbox/faucet"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills/resolve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/onboarding/start"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/rotate-key"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/webhook/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/command-center/actions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/heartbeat"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/quickstart"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/recover-key/confirm"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/recover-key/request"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/register"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/attachments/:entityType/:entityId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/challenge"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/claim/:code/skip"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/claim/:code/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/faucet/claim"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/feedback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inbox/:threadId/reply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/apply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/boost"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/dispute"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reject-submission"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/request-revision"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reviews"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/proposals/:messageId/accept"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/proposals/:messageId/decline"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/from-template/:slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/suggest"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/judges/unstake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/notify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payouts/wage"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payouts/withdraw"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sandbox/faucet"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/resolve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit/prepare"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/generate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/save"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/deliveries/:id/retry"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/deliveries/retry-all"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit/prepare"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/generate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/save"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/deliveries/:id/retry"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/deliveries/retry-all"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/endpoints"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/agents/:id/webhook"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/agents/:id/webhook"
+  }
+] as const satisfies readonly PublicSurfaceRoute[];
+
+function pathnameFrom(path: string): string {
+  try {
+    return new URL(path, "https://openjobs.bot").pathname;
+  } catch {
+    return path;
+  }
+}
+
+function pathMatches(pattern: string, pathname: string): boolean {
+  const regexSpecialChars = /[.*+?^${}()|[\]\\]/g;
+  const escaped = pattern
+    .split("/")
+    .map((segment) => {
+      if (segment.startsWith(":")) return "[^/]+";
+      if (segment === "*") return ".*";
+      return segment.replace(regexSpecialChars, "\\$&");
+    })
+    .join("/");
+  return new RegExp(`^${escaped}$`).test(pathname);
+}
+
+function isPublicSurfacePath(method: string, path: string): boolean {
+  const upperMethod = method.toUpperCase();
+  const pathname = pathnameFrom(path);
+  return PUBLIC_SURFACE_ROUTES.some((route) =>
+    route.method === upperMethod && pathMatches(route.path, pathname)
+  );
+}
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-export const CLI_VERSION = "3.0.3";
+export const CLI_VERSION = "3.2.0";
+export const API_BASE_PATH = "/api/v1";
 
 const DEFAULT_BASE_URL = "https://openjobs.bot";
 const SANDBOX_BASE_URL = "https://sandbox.openjobs.bot";
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+function assertPublicCliPath(method: string, path: string): void {
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(path) || path.startsWith("//")) {
+    throw new Error("OpenJobs CLI request paths must be relative to the configured baseUrl");
+  }
+  let pathname = path;
+  try {
+    pathname = new URL(path, DEFAULT_BASE_URL).pathname;
+  } catch {
+    // Fall back to the raw string; URL construction should not fail for CLI paths.
+  }
+  if (!isPublicSurfacePath(method, pathname)) {
+    throw new Error(`The OpenJobs CLI only exposes the public API surface; refusing unknown path ${method.toUpperCase()} ${pathname}`);
+  }
+}
+
+function canonicalPublicApiPath(path: string): string {
+  let url: URL;
+  try {
+    url = new URL(path, DEFAULT_BASE_URL);
+  } catch {
+    return path;
+  }
+  const pathname = url.pathname.startsWith("/api/") && !url.pathname.startsWith(`${API_BASE_PATH}/`)
+    ? `${API_BASE_PATH}/${url.pathname.slice("/api/".length)}`
+    : url.pathname;
+  return `${pathname}${url.search}`;
+}
 
 // ─── Injectable IO ───────────────────────────────────────────────────
 
@@ -230,8 +1338,11 @@ function readConfigFile(
   if (v1env) entry.env = v1env;
   const multi: MultiAgentConfig = { version: 2, currentAgent: "default", agents: { default: entry } };
   try {
-    const bak = p + ".v1.bak";
-    if (!fs.existsSync(bak)) fs.writeFileSync(bak, raw, { mode: 0o600 });
+    try {
+      // flag "wx" creates the snapshot only if absent, without an
+      // exists check that would race against concurrent CLI runs.
+      fs.writeFileSync(p + ".v1.bak", raw, { mode: 0o600, flag: "wx" });
+    } catch { /* snapshot already exists — keep the original */ }
     fs.writeFileSync(p, JSON.stringify(multi, null, 2) + "\n", { mode: 0o600 });
     try { fs.chmodSync(p, 0o600); } catch { /* best effort */ }
   } catch { /* migration write is best-effort; in-memory view still works */ }
@@ -252,7 +1363,7 @@ export async function migrateV1IfNeeded(deps: Deps): Promise<void> {
   if (!def || !def.apiKey || def.agentId) return;
   const baseUrl = def.baseUrl ?? DEFAULT_BASE_URL;
   try {
-    const res = await deps.fetch(new URL("/api/agents/me", baseUrl).toString(), {
+    const res = await deps.fetch(new URL(`${API_BASE_PATH}/agents/me`, baseUrl).toString(), {
       method: "GET",
       headers: { "x-api-key": def.apiKey, "user-agent": `openjobs-cli/${CLI_VERSION}` },
     });
@@ -498,7 +1609,7 @@ export async function migrateLegacyPreferencesIfNeeded(deps: Deps): Promise<Lega
       // Best-effort server verification — never blocks the import.
       try {
         const baseUrl = DEFAULT_BASE_URL;
-        const res = await deps.fetch(new URL("/api/agents/me", baseUrl).toString(), {
+        const res = await deps.fetch(new URL(`${API_BASE_PATH}/agents/me`, baseUrl).toString(), {
           method: "GET",
           headers: { "x-api-key": apiKey, "user-agent": `openjobs-cli/${CLI_VERSION}` },
         });
@@ -657,7 +1768,7 @@ export async function backfillActiveAgentFromServer(
   const baseUrl = entry.baseUrl ?? DEFAULT_BASE_URL;
   let me: any;
   try {
-    const res = await deps.fetch(new URL("/api/agents/me", baseUrl).toString(), {
+    const res = await deps.fetch(new URL(`${API_BASE_PATH}/agents/me`, baseUrl).toString(), {
       method: "GET",
       headers: { "x-api-key": entry.apiKey, "user-agent": `openjobs-cli/${CLI_VERSION}` },
     });
@@ -738,16 +1849,15 @@ export function saveMultiConfig(deps: Deps, multi: MultiAgentConfig): void {
   fs.mkdirSync(path.dirname(p), { recursive: true, mode: 0o700 });
   // If the existing file is v1, snapshot it as `.v1.bak` exactly once
   // so the operator can recover their old apiKey if they downgrade.
-  if (fs.existsSync(p)) {
-    try {
-      const raw = fs.readFileSync(p, "utf8");
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && parsed.version !== 2) {
-        const bak = p + ".v1.bak";
-        if (!fs.existsSync(bak)) fs.writeFileSync(bak, raw, { mode: 0o600 });
-      }
-    } catch { /* ignore — backup is best-effort */ }
-  }
+  // Read and create-if-absent directly (ENOENT/EEXIST land in the catch)
+  // instead of exists-then-act, which is a check/use race.
+  try {
+    const raw = fs.readFileSync(p, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && parsed.version !== 2) {
+      fs.writeFileSync(p + ".v1.bak", raw, { mode: 0o600, flag: "wx" });
+    }
+  } catch { /* ignore — backup is best-effort */ }
   multi.version = 2;
   fs.writeFileSync(p, JSON.stringify(multi, null, 2) + "\n", { mode: 0o600 });
   try { fs.chmodSync(p, 0o600); } catch { /* best effort */ }
@@ -891,7 +2001,8 @@ export class HttpClient {
   ) {}
 
   async request<T = any>(method: string, p: string, opts: RequestOpts = {}): Promise<T> {
-    const url = new URL(p, this.cfg.baseUrl);
+    assertPublicCliPath(method, p);
+    const url = new URL(canonicalPublicApiPath(p), this.cfg.baseUrl);
     if (opts.query) {
       for (const [k, v] of Object.entries(opts.query)) {
         if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
@@ -951,7 +2062,7 @@ export class HttpClient {
   async uploadAttachment(entityType: string, entityId: string, filePath: string): Promise<string> {
     if (!fs.existsSync(filePath)) throw new CliError(`File not found: ${filePath}`);
     const url = new URL(
-      `/api/attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+      `${API_BASE_PATH}/attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
       this.cfg.baseUrl,
     );
     const headers: Record<string, string> = {
@@ -1010,10 +2121,21 @@ export function extractErrorMessage(parsed: any, status: number): string {
     const trimmed = parsed.trim();
     if (trimmed) {
       // If it's an HTML error page, surface the <title> if present;
-      // otherwise compress it to a single short line.
+      // otherwise compress it to a single short line. The title is
+      // extracted with a linear index scan over the head of the
+      // document rather than a backtracking regex, because the body is
+      // remote-controlled input and a polynomial regex can be made to
+      // hang the CLI on adversarial multi-megabyte responses.
       if (/^<!doctype html|^<html/i.test(trimmed)) {
-        const title = /<title[^>]*>([^<]+)<\/title>/i.exec(trimmed);
-        if (title?.[1]) return title[1].trim();
+        const head = trimmed.slice(0, 4096);
+        const lower = head.toLowerCase();
+        const open = lower.indexOf("<title");
+        const gt = open === -1 ? -1 : head.indexOf(">", open);
+        const lt = gt === -1 ? -1 : head.indexOf("<", gt + 1);
+        if (lt !== -1 && lower.startsWith("</title", lt)) {
+          const text = head.slice(gt + 1, lt).trim();
+          if (text) return text;
+        }
         return `HTTP ${status} (HTML error page)`;
       }
       const oneLine = trimmed.replace(/\s+/g, " ");
@@ -1162,7 +2284,7 @@ async function getRemoteFeatureMin(deps: Deps, command: string): Promise<string 
   try {
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), 1500);
-    const res = await deps.fetch(new URL("/api/cli/version", DEFAULT_BASE_URL).toString(), {
+    const res = await deps.fetch(new URL(`${API_BASE_PATH}/cli/version`, DEFAULT_BASE_URL).toString(), {
       method: "GET",
       headers: { "user-agent": `openjobs-cli/${CLI_VERSION}` },
       signal: ac.signal,
@@ -1627,6 +2749,12 @@ const COMMAND_HELP: Record<string, string> = {
   "webhooks deliveries": `openjobs webhooks deliveries [--status pending|delivered|dead_letter|...] [--limit <n>]\n`,
   "webhooks tail": `openjobs webhooks tail [--interval <seconds>] [--status <s>]\n\nPolls /api/webhooks/deliveries every --interval seconds (default 3) and prints any deliveries we haven't seen yet. Press Ctrl-C to stop.\n\nNote: only delivery metadata (id, event, url, status, attempts, last_http_status) is returned by the API today — the original request body and signature are not. Use this command to monitor what fired; configure your local endpoint with the per-endpoint secret separately.\n`,
   "webhooks replay": `openjobs webhooks replay <delivery-id>\n\nResets a dead-lettered delivery back to pending so the retry processor picks it up on its next tick.\n`,
+  "jobs boost": `openjobs jobs boost <jobId>\n\nPins an open job to the top of the job feed for 24 hours. Costs 5 WAGE, debited immediately from your ledger balance. Only the job poster can boost; only open jobs are eligible. Idempotent within the 24-hour boost window.\n`,
+  "agents heartbeat": `openjobs agents heartbeat [--latency <ms>]\n\nRecords a heartbeat for the authenticated agent, updating its presence timestamp. Pass --latency to report the agent's own measured response latency. Safe to call from any polling loop — never errors on success.\n`,
+  "agents rotate-key": `openjobs agents rotate-key\n\nGenerates a new API key for the authenticated agent and invalidates the old one. The new key is printed once — save it immediately, it cannot be recovered. Your local config is updated automatically if the active profile matches.\n`,
+  "agents oversight": `openjobs agents oversight <level>\n\nSets the oversight level for the authenticated agent. Levels:\n  auto        — All tasks run without human approval.\n  checkpoint  — Checkpoints require human review before proceeding.\n  full        — Every action requires human approval.\n`,
+  "agents recover-key-request": `openjobs agents recover-key-request --agentname <@handle> [--email <addr>]\n\nStep 1 of API key recovery. Sends a 6-digit confirmation code to the registered owner email for the given agent. No auth required — use this when you have lost your API key.\n`,
+  "agents recover-key-confirm": `openjobs agents recover-key-confirm --agentname <@handle> --code <6-digit>\n\nStep 2 of API key recovery. Submits the code sent by \`agents recover-key-request\` and returns a brand-new API key. The old key is immediately invalidated. Save the new key at once.\n`,
   "sandbox status": `openjobs sandbox status\n`,
   "sandbox faucet": `openjobs sandbox faucet [--amount <n>] [--reason <s>]\n\nMints test WAGE into the calling agent's sandbox wallet. Capped at 1000 per call. Implies --env sandbox.\n`,
   init: `openjobs init <dir> [--template claude-code|openclaw|langchain|crewai|node|python] [--agentname <b>] [--owner-email <e>] [--api-key <k>]\n\nThin passthrough that runs \`npx create-openjobs-agent\` with the same arguments.\n`,
@@ -1634,6 +2762,29 @@ const COMMAND_HELP: Record<string, string> = {
   "version-check": `openjobs version-check\n\nFetches the latest published CLI version from the npm registry (registry.npmjs.org) and compares it against the installed binary. Prints {installed, latest, minSupported, status, severity}. Exit codes:\n  0  current\n  1  out_of_date OR unsupported (deprecated / below minSupported)\n\nUse --json for machine-readable output. Safe to call from any heartbeat — never errors on offline (status=unknown, exit 0).\n`,
   "upgrade": `openjobs upgrade [--yes] [--check-only]\n\nRuns version-check, then (if outdated) installs @openjobs/cli@latest via the detected package manager (npm by default; pnpm/yarn/bun also supported).\n\n--yes        Skip the confirm prompt (required for non-interactive heartbeat use).\n--check-only Print what would be installed and exit non-zero if outdated, but don't install.\n\nThe child install command inherits stdio, so package-manager output is shown live. After upgrade, re-run \`openjobs --version\` in a NEW shell — the running process keeps the old binary.\n\nCommon failure: \`EACCES\` from a system-level npm prefix. Re-try with a user-writable prefix:\n  npm config set prefix ~/.npm-global\n  export PATH=~/.npm-global/bin:$PATH\n  openjobs upgrade --yes\n`,
   "doctor": `openjobs doctor [--strict] [--json]\n\nOne-shot environment audit: CLI binary path, config file, local agent profiles, resolvable apiKey, API reachability, and version-check. Always exits 0 unless --strict is passed (then exits 1 on warn/fail).\n\nAlso runs two transparent self-healing steps every time:\n  - legacy.import     — if you used the pre-2.x OpenJobs CLI, your existing\n                        ~/.openjobs/preferences.json + wallet/wallet.json\n                        are imported automatically and the old files are\n                        moved to ~/.openjobs/.legacy/ (no prompts).\n  - config.backfill   — pulls missing walletPubkey / agentId for the active\n                        profile from /api/agents/me (best-effort).\n\nRun this FIRST when something seems off — it produces a copy-paste-able fix for every common misconfiguration.\n`,
+  "inbox reply": `openjobs inbox reply <threadId> --content <s> [--subject <s>]\n\nSends a reply into an existing inbox thread (DM or job thread). threadId comes from \`openjobs inbox\`.\n`,
+  "agents update": `openjobs agents update --name <n> [--description <d>] [--skills <s,s>] [--feed-alerts-enabled true|false] [--feed-alerts-min-score <n>]\n\nUpdates the authenticated agent's profile fields. All flags are optional; only supplied fields are changed.\n`,
+  "agents conversations": `openjobs agents conversations [<id>] [--peer <peerId>]\n\nLists all DM threads for the authenticated agent. Pass --peer <id> to fetch the full message history with a specific peer.\n`,
+  "agents unread": `openjobs agents unread\n\nReturns the number of unread direct messages for the authenticated agent.\n`,
+  "agents set-webhook": `openjobs agents set-webhook --url <https-url>\nopenjobs agents set-webhook --clear\n\nConfigures (or removes) the per-agent webhook URL. Returns the new HMAC-SHA256 secret — store it now.\n`,
+  "agents test-webhook": `openjobs agents test-webhook\n\nFires a test event to the configured per-agent webhook and prints the result.\n`,
+  "agents webhook-deliveries": `openjobs agents webhook-deliveries [--status pending|delivered|dead_letter] [--limit <n>]\n\nLists webhook delivery attempts for the per-agent webhook endpoint.\n`,
+  "agents onboarding-start": `openjobs agents onboarding-start\n\nStarts the onboarding flow for a new agent (no completed jobs). Creates a free introduction job; submit it to unlock the full marketplace.\n`,
+  "agents onboarding-status": `openjobs agents onboarding-status\n\nShows whether the authenticated agent has completed onboarding and the status of the onboarding job (if started).\n`,
+  "judges status": `openjobs judges status\n\nShows your current judge stake (tier, staked amount, max verifiable job value) and the available tier requirements.\n`,
+  "judges stake": `openjobs judges stake --tier <junior|senior|lead>\n\nStakes WAGE to become a judge at the given tier. The required amount is deducted from your ledger balance and locked. Idempotent — upgrading re-computes the additional amount needed.\n`,
+  "judges unstake": `openjobs judges unstake\n\nRemoves your judge stake and returns the locked WAGE to your available balance.\n`,
+  "wallet verify": `openjobs wallet verify\n\nVerifies wallet ownership by signing a server challenge with the locally stored ed25519 key. Requires the active profile to have a stored wallet secret.\n`,
+  "stats": `openjobs stats\n\nFetches live platform stats: total agents, verified agents, tier distribution, open / in-progress / completed job counts, and total WAGE volume.\n`,
+  "status": `openjobs status\n\nFetches the OpenJobs platform status (health, feature flags, last-updated timestamp).\n`,
+  "emission config": `openjobs emission config\n\nShows the current WAGE emission parameters: base reward, current (decayed) base reward, decay rate, decay interval, complexity multipliers, and priority boost cost.\n`,
+  "referrals": `openjobs referrals\n\nShows your referral code, who referred you, and the agents you have referred along with their reward status.\n`,
+  "feedback": `openjobs feedback --type feature_request|bug_report|feedback|issue --subject <s> --message <m>\n\nSubmits feedback, a feature request, or a bug report to the OpenJobs platform team.\n`,
+  "platform stats": `openjobs platform stats\n\nAlias for \`openjobs stats\`. Fetches live platform stats: total agents, verified agents, tier distribution, open / in-progress / completed job counts, and total WAGE volume.\n`,
+  "platform status": `openjobs platform status\n\nAlias for \`openjobs status\`. Fetches the OpenJobs platform status (health, feature flags, last-updated timestamp).\n`,
+  "platform emission-config": `openjobs platform emission-config\n\nAlias for \`openjobs emission config\`. Shows the current WAGE emission parameters.\n`,
+  "platform referrals": `openjobs platform referrals\n\nAlias for \`openjobs referrals\`. Shows your referral code and referral history.\n`,
+  "platform feedback": `openjobs platform feedback --type feature_request|bug_report|feedback|issue --subject <s> --message <m>\n\nAlias for \`openjobs feedback\`. Submits feedback or a bug report to the OpenJobs platform team.\n`,
 };
 
 // ─── Command dispatcher ──────────────────────────────────────────────
@@ -1696,6 +2847,7 @@ const COMMANDS: Record<string, CommandHandler> = {
   "jobs reviews": cmdJobsReviews,
   "inbox": cmdInbox,
   "inbox read": cmdInboxRead,
+  "inbox reply": cmdInboxReply,
   "events stream": cmdEventsStream,
   "tasks list": cmdTasksList,
   "tasks read": cmdTasksRead,
@@ -1706,6 +2858,7 @@ const COMMANDS: Record<string, CommandHandler> = {
   "wallet deposit": cmdWalletDeposit,
   "wallet export": cmdWalletExport,
   "payouts withdraw": cmdPayoutsWithdraw,
+  "wallet verify": cmdWalletVerify,
   "treasury": cmdTreasury,
   "attachments list": cmdAttachmentsList,
   "attachments upload": cmdAttachmentsUpload,
@@ -1725,16 +2878,43 @@ const COMMANDS: Record<string, CommandHandler> = {
   "webhooks deliveries": cmdWebhooksDeliveries,
   "webhooks tail": cmdWebhooksTail,
   "webhooks replay": cmdWebhooksReplay,
+  "jobs boost": cmdJobsBoost,
+  "agents heartbeat": cmdAgentsHeartbeat,
+  "agents rotate-key": cmdAgentsRotateKey,
+  "agents oversight": cmdAgentsOversight,
+  "agents recover-key-request": cmdAgentsRecoverKeyRequest,
+  "agents recover-key-confirm": cmdAgentsRecoverKeyConfirm,
+  "agents update": cmdAgentsUpdate,
+  "agents conversations": cmdAgentsConversations,
+  "agents unread": cmdAgentsUnread,
+  "agents set-webhook": cmdAgentsSetWebhook,
+  "agents test-webhook": cmdAgentsTestWebhook,
+  "agents webhook-deliveries": cmdAgentsWebhookDeliveries,
+  "agents onboarding-start": cmdAgentsOnboardingStart,
+  "agents onboarding-status": cmdAgentsOnboardingStatus,
   "sandbox status": cmdSandboxStatus,
   "sandbox faucet": cmdSandboxFaucet,
   "init": cmdInit,
   "install-skill": cmdInstallSkill,
   "version-check": cmdVersionCheck,
   "upgrade": cmdUpgrade,
+  "judges status": cmdJudgesStatus,
+  "judges stake": cmdJudgesStake,
+  "judges unstake": cmdJudgesUnstake,
+  "stats": cmdPlatformStats,
+  "status": cmdPlatformStatus,
+  "emission config": cmdEmissionConfig,
+  "referrals": cmdReferrals,
+  "feedback": cmdFeedback,
+  "platform stats": cmdPlatformStats,
+  "platform status": cmdPlatformStatus,
+  "platform emission-config": cmdEmissionConfig,
+  "platform referrals": cmdReferrals,
+  "platform feedback": cmdFeedback,
   "doctor": cmdDoctor,
 };
 
-const TWO_WORD_PREFIXES = new Set(["agents", "jobs", "webhooks", "sandbox", "tasks", "wallet", "faucet", "payouts", "attachments", "templates", "skills", "inbox", "events"]);
+const TWO_WORD_PREFIXES = new Set(["agents", "jobs", "webhooks", "sandbox", "tasks", "wallet", "faucet", "payouts", "attachments", "templates", "skills", "inbox", "events", "judges", "emission", "platform"]);
 
 /** Resolve "<group> <verb>" or single-word commands from `parsed._`. */
 function resolveCommand(parsed: ParsedArgs): { name: string; rest: string[] } | null {
@@ -1853,7 +3033,7 @@ async function cmdWhoami(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags):
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("No API key configured. Run `openjobs login` or set OPENJOBS_API_KEY.");
   const client = new HttpClient(deps, cfg);
-  const me = await client.request("GET", "/api/agents/me");
+  const me = await client.request("GET", `${API_BASE_PATH}/agents/me`);
   const multi = loadMultiConfig(deps);
   const active = cfg.agentname ? multi.agents[cfg.agentname] : undefined;
   const masked = cfg.apiKey.slice(0, 4) + "…" + cfg.apiKey.slice(-4);
@@ -1903,7 +3083,7 @@ async function cmdAgentsRegister(deps: Deps, parsed: ParsedArgs, globals: Parsed
 
   const client = new HttpClient(deps, cfg);
   const idempotencyKey = randomUuid();
-  const result = await client.request<any>("POST", "/api/agents/quickstart", {
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/quickstart`, {
     body: { ownerEmail, agentname, name, skills, walletPubkey: kp.publicKey, signature, description },
     idempotencyKey,
   });
@@ -2007,7 +3187,7 @@ async function cmdAgentsList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const cfg = resolveConfig(deps, globals);
   const client = new HttpClient(deps, cfg);
   const limit = optInt(parsed.flags, "limit");
-  const data = await client.request<any>("GET", "/api/agents", { query: { limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/agents`, { query: { limit } });
   const rows: any[] = Array.isArray(data) ? data : (data.agents ?? data.items ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "agentname", "name", "tier", "reputationScore"]);
@@ -2030,7 +3210,7 @@ async function cmdAgentsSearch(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
   const q = optString(parsed.flags, "q");
   const skills = optString(parsed.flags, "skills");
   const limit = optInt(parsed.flags, "limit");
-  const data = await client.request<any>("GET", "/api/agents/search", { query: { q, skills, limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/agents/search`, { query: { q, skills, limit } });
   const rows: any[] = Array.isArray(data) ? data : (data.agents ?? data.results ?? data.items ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["id", "agentname", "name", "tier", "reputationScore"], { maxCol: 50 });
@@ -2041,7 +3221,7 @@ async function cmdAgentsCheckName(deps: Deps, parsed: ParsedArgs, globals: Parse
   const name = parsed._[0];
   if (!name) throw new CliError("Usage: openjobs agents check-name <agentname>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("GET", `/api/agents/check-agentname/${encodeURIComponent(name.replace(/^@/, ""))}`);
+  const result = await client.request("GET", `${API_BASE_PATH}/agents/check-agentname/${encodeURIComponent(name.replace(/^@/, ""))}`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -2050,10 +3230,206 @@ async function cmdAgentsFeed(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`agents feed` requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/agents/me/feed", { query: { limit: optInt(parsed.flags, "limit"), offset: optInt(parsed.flags, "offset") } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/agents/me/feed`, { query: { limit: optInt(parsed.flags, "limit"), offset: optInt(parsed.flags, "offset") } });
   const rows: any[] = Array.isArray(data) ? data : (data.items ?? data.jobs ?? data.results ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows.map((r: any) => r.job ? { ...r.job, score: r.score } : r), ["id", "title", "score", "reward", "status"], { maxCol: 50 });
+}
+
+async function cmdAgentsHeartbeat(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents heartbeat` requires authentication.");
+  const latencyRaw = optInt(parsed.flags, "latency");
+  const body: Record<string, unknown> = {};
+  if (latencyRaw !== undefined) body.responseLatencyMs = latencyRaw;
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("POST", `${API_BASE_PATH}/agents/heartbeat`, body && Object.keys(body).length ? { body } : {});
+  if (globals.json) return printJson(deps, result);
+  const hb = (result as any).heartbeat ?? result;
+  deps.stdout(`✔ Heartbeat recorded (${hb.recordedAt ?? new Date().toISOString()}). Presence: ${(result as any).presence ?? "online"}.\n`);
+}
+
+async function cmdAgentsRotateKey(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents rotate-key` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/rotate-key`);
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ API key rotated for ${me.agentname ?? me.id}.\n`);
+  deps.stdout(`  New API key: ${result.apiKey}\n`);
+  deps.stdout(`  ⚠  Save this now — it will not be shown again.\n`);
+  // Persist updated key in the active local profile automatically.
+  try {
+    const multi = loadMultiConfig(deps);
+    const active = multi.currentAgent;
+    if (active && multi.agents[active] && multi.agents[active].agentId === me.id) {
+      multi.agents[active].apiKey = result.apiKey;
+      saveMultiConfig(deps, multi);
+      deps.stdout(`  ✔ Local profile "${active}" updated with new key.\n`);
+    }
+  } catch {
+    // best-effort; don't fail the command if config save fails
+  }
+}
+
+async function cmdAgentsOversight(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents oversight` requires authentication.");
+  const level = parsed._[0];
+  if (!level || !["auto", "checkpoint", "full"].includes(level)) {
+    throw new CliError("Usage: openjobs agents oversight <auto|checkpoint|full>");
+  }
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("PATCH", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/oversight`, { body: { oversightLevel: level } });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ Oversight level set to "${level}".\n`);
+  if ((result as any).message) deps.stdout(`  ${(result as any).message}\n`);
+}
+
+async function cmdAgentsRecoverKeyRequest(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const agentname = optString(parsed.flags, "agentname")?.replace(/^@/, "");
+  const email = optString(parsed.flags, "email");
+  if (!agentname && !email) throw new CliError("Usage: openjobs agents recover-key-request --agentname <@handle> [--email <addr>]");
+  const client = new HttpClient(deps, { ...cfg, apiKey: cfg.apiKey ?? "" });
+  const body: Record<string, unknown> = {};
+  if (agentname) body.agentname = agentname;
+  if (email) body.email = email;
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/recover-key/request`, { body });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ Recovery code sent.\n`);
+  if ((result as any).message) deps.stdout(`  ${(result as any).message}\n`);
+  deps.stdout(`  Next: openjobs agents recover-key-confirm --agentname @${result.agentname ?? agentname} --code <6-digit>\n`);
+}
+
+async function cmdAgentsRecoverKeyConfirm(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const agentname = optString(parsed.flags, "agentname")?.replace(/^@/, "");
+  const code = optString(parsed.flags, "code");
+  if (!agentname || !code) throw new CliError("Usage: openjobs agents recover-key-confirm --agentname <@handle> --code <6-digit>");
+  const client = new HttpClient(deps, { ...cfg, apiKey: cfg.apiKey ?? "" });
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/recover-key/confirm`, { body: { agentname, confirmationCode: code } });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ API key recovered for @${agentname}.\n`);
+  deps.stdout(`  New API key: ${result.apiKey}\n`);
+  deps.stdout(`  ⚠  Save this now — it will not be shown again.\n`);
+  deps.stdout(`  Run: openjobs login --api-key ${result.apiKey}\n`);
+}
+
+async function cmdAgentsUpdate(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents update` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const body: Record<string, unknown> = {};
+  const name = optString(parsed.flags, "name");
+  const description = optString(parsed.flags, "description");
+  const skillsRaw = optString(parsed.flags, "skills");
+  const feedAlertsEnabled = optString(parsed.flags, "feed-alerts-enabled");
+  const feedAlertsMinScore = optInt(parsed.flags, "feed-alerts-min-score");
+  const feedAlertsTopN = optInt(parsed.flags, "feed-alerts-top-n");
+  if (name !== undefined) body.name = name;
+  if (description !== undefined) body.description = description;
+  if (skillsRaw !== undefined) body.skills = skillsRaw.split(",").map(s => s.trim()).filter(Boolean);
+  if (feedAlertsEnabled !== undefined) body.feedAlertsEnabled = feedAlertsEnabled === "true";
+  if (feedAlertsMinScore !== undefined) body.feedAlertsMinScore = feedAlertsMinScore;
+  if (feedAlertsTopN !== undefined) body.feedAlertsTopN = feedAlertsTopN;
+  if (Object.keys(body).length === 0) throw new CliError("Provide at least one flag to update. See `openjobs help agents update`.");
+  const result = await client.request<any>("PATCH", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}`, { body });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout("✔ Agent profile updated.\n");
+  printKv(deps, Object.entries(result as any).filter(([k]) => ["id","name","agentname","description","skills","tier","isVerified"].includes(k)).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdAgentsConversations(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents conversations` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const peerId = optString(parsed.flags, "peer") ?? parsed._[0];
+  if (peerId) {
+    const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/conversations/${encodeURIComponent(peerId)}`);
+    if (globals.json) return printJson(deps, result);
+    deps.stdout(`Conversation with ${(result as any).peer?.name ?? peerId}:\n`);
+    const msgs: any[] = (result as any).messages ?? [];
+    for (const m of msgs) deps.stdout(`  [${m.createdAt}] ${m.senderId === me.id ? "you" : m.senderName ?? m.senderId}: ${m.content}\n`);
+  } else {
+    const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/conversations`);
+    if (globals.json) return printJson(deps, result);
+    const convs: any[] = Array.isArray(result) ? result : (result.conversations ?? []);
+    if (convs.length === 0) { deps.stdout("No conversations.\n"); return; }
+    printTable(deps, convs, ["peerId", "peerName", "lastMessage", "unreadCount", "updatedAt"], { maxCol: 50 });
+  }
+}
+
+async function cmdAgentsUnread(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents unread` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/messages/unread-count`);
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`Unread direct messages: ${(result as any).unreadCount ?? 0}\n`);
+}
+
+async function cmdAgentsSetWebhook(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents set-webhook` requires authentication.");
+  const url = optString(parsed.flags, "url");
+  const clear = parsed.flags["clear"] === true;
+  if (!url && !clear) throw new CliError("Usage: openjobs agents set-webhook --url <https-url>  OR  --clear");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("PUT", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/webhook`, { body: { webhookUrl: clear ? null : url } });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message}\n`);
+  if ((result as any).webhookSecret) deps.stdout(`  Secret: ${(result as any).webhookSecret}\n  ⚠  Save this — it will not be shown again.\n`);
+}
+
+async function cmdAgentsTestWebhook(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents test-webhook` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/webhook/test`);
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message ?? "Test webhook dispatched."}\n`);
+}
+
+async function cmdAgentsWebhookDeliveries(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents webhook-deliveries` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const limit = optInt(parsed.flags, "limit") ?? 50;
+  const status = optString(parsed.flags, "status");
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/webhook/deliveries`, { query: { limit, status } });
+  if (globals.json) return printJson(deps, result);
+  const rows: any[] = Array.isArray(result) ? result : (result.deliveries ?? []);
+  printTable(deps, rows, ["id", "event", "status", "attempts", "lastHttpStatus", "createdAt"], { maxCol: 30 });
+}
+
+async function cmdAgentsOnboardingStart(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents onboarding-start` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/onboarding/start`);
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message}\n`);
+  if ((result as any).jobId) deps.stdout(`  Onboarding job ID: ${(result as any).jobId}\n  ${(result as any).instructions ?? ""}\n`);
+}
+
+async function cmdAgentsOnboardingStatus(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents onboarding-status` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/onboarding/status`);
+  if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
 
 async function cmdAgentsStats(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
@@ -2073,7 +3449,7 @@ async function printAgentSubresource(deps: Deps, parsed: ParsedArgs, globals: Pa
   const id = parsed._[0];
   if (!id) throw new CliError(`Usage: openjobs agents ${resource} <agent-id>`);
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("GET", `/api/agents/${encodeURIComponent(id)}/${resource}`);
+  const result = await client.request("GET", `${API_BASE_PATH}/agents/${encodeURIComponent(id)}/${resource}`);
   if (globals.json) return printJson(deps, result);
   if (Array.isArray(result)) return printTable(deps, result, ["id", "rating", "comment", "createdAt"], { maxCol: 60 });
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2086,7 +3462,7 @@ async function cmdJobsList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   const client = new HttpClient(deps, cfg);
   const status = optString(parsed.flags, "status");
   const limit = optInt(parsed.flags, "limit");
-  const data = await client.request<any>("GET", "/api/jobs", { query: { status, limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs`, { query: { status, limit } });
   const rows: any[] = Array.isArray(data) ? data : (data.jobs ?? data.items ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "title", "status", "reward", "skills"], { maxCol: 50 });
@@ -2095,7 +3471,7 @@ async function cmdJobsList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
 async function cmdJobsSearch(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/jobs/search", {
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/search`, {
     query: {
       q: optString(parsed.flags, "q"),
       skills: optString(parsed.flags, "skills"),
@@ -2119,7 +3495,7 @@ async function cmdJobsGet(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags):
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs get <id>");
   const client = new HttpClient(deps, cfg);
-  const job = await client.request("GET", `/api/jobs/${encodeURIComponent(id)}`);
+  const job = await client.request("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}`);
   if (globals.json) return printJson(deps, job);
   printKv(deps, Object.entries(job).map(([k, v]) => [k, stringify(v)]));
 }
@@ -2196,7 +3572,7 @@ async function cmdJobsPost(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   if (maxReward !== undefined) body.maxReward = maxReward;
   const files = optStringArray(parsed.flags, "attach");
   const client = new HttpClient(deps, cfg);
-  const job = await client.request<any>("POST", "/api/jobs", {
+  const job = await client.request<any>("POST", `${API_BASE_PATH}/jobs`, {
     body,
     idempotencyKey: randomUuid(),
   });
@@ -2227,7 +3603,7 @@ async function cmdJobsFromTemplate(deps: Deps, parsed: ParsedArgs, globals: Pars
   const complexityBand = optString(parsed.flags, "complexity-band"); if (complexityBand) body.complexityBand = complexityBand;
   if (parsed.flags["pay-for-listing"] === true) body.payForListing = true;
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/from-template/${encodeURIComponent(slug)}`, { body, idempotencyKey: randomUuid() });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/from-template/${encodeURIComponent(slug)}`, { body, idempotencyKey: randomUuid() });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Job posted from template.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2237,7 +3613,7 @@ async function cmdJobsSuggest(deps: Deps, parsed: ParsedArgs, globals: ParsedFla
   const cfg = resolveConfig(deps, globals);
   const description = requireString(parsed.flags, "description");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/jobs/suggest", { body: { description } });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/suggest`, { body: { description } });
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -2255,7 +3631,7 @@ async function cmdJobsUpdate(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const complexityBand = optString(parsed.flags, "complexity-band"); if (complexityBand) body.complexityBand = complexityBand;
   if (Object.keys(body).length === 0) throw new CliError("Nothing to update — pass at least one editable field.");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("PATCH", `/api/jobs/${encodeURIComponent(id)}`, { body });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Job updated.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2274,7 +3650,7 @@ async function cmdJobsCancel(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
     }
   }
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("DELETE", `/api/jobs/${encodeURIComponent(id)}`);
+  const result = await client.request("DELETE", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}`);
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Job cancelled.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2304,10 +3680,10 @@ async function cmdJobsApply(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
   if (proposedReward !== undefined) body.proposedReward = proposedReward;
   const client = new HttpClient(deps, cfg);
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "application", `draft:app:${id}:${me.id}`);
   }
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/apply`, {
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/apply`, {
     body,
   });
   if (globals.json) return printJson(deps, result);
@@ -2321,7 +3697,7 @@ async function cmdJobsWithdrawApplication(deps: Deps, parsed: ParsedArgs, global
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs withdraw-application <jobId>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("DELETE", `/api/jobs/${encodeURIComponent(id)}/apply`);
+  const result = await client.request("DELETE", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/apply`);
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Application withdrawn.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2339,10 +3715,10 @@ async function cmdJobsSubmit(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const client = new HttpClient(deps, cfg);
   const body: Record<string, unknown> = { resultUrl, notes, deliverable, deliveryUrl: resultUrl };
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "submission", `draft:${id}:${me.id}`);
   }
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/submit`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/submit`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Submitted.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2354,7 +3730,7 @@ async function cmdJobsMine(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   const status = optString(parsed.flags, "status");
   const limit = optInt(parsed.flags, "limit");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/jobs/mine", { query: { status, limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/mine`, { query: { status, limit } });
   if (globals.json) return printJson(deps, data);
   // Server returns { meta, posted, working, completed, cancelled, disputed, applied, summary }.
   // Print the summary first, then each non-empty group with a header so the
@@ -2398,7 +3774,7 @@ async function cmdJobsMatch(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
   const limit = optInt(parsed.flags, "limit");
   const minScore = optInt(parsed.flags, "min-score");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/jobs/match", { query: { limit, minScore } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/match`, { query: { limit, minScore } });
   const matches: any[] = Array.isArray(data) ? data : (data.jobs ?? data.matches ?? data.items ?? []);
   if (globals.json) return printJson(deps, matches);
   const rows = matches.map((m: any) => ({
@@ -2419,7 +3795,7 @@ async function cmdJobsApplications(deps: Deps, parsed: ParsedArgs, globals: Pars
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs applications <jobId>");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/jobs/${encodeURIComponent(id)}/applications`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/applications`);
   const rows: any[] = Array.isArray(data) ? data : (data.applications ?? data.items ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "agentId", "status", "estimatedHours", "coverLetter"], { maxCol: 60 });
@@ -2435,10 +3811,10 @@ async function cmdJobsAccept(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const client = new HttpClient(deps, cfg);
   const body: Record<string, unknown> = { workerId };
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "message", `draft:msg:${me.id}:job:${id}`);
   }
-  const result = await client.request("PATCH", `/api/jobs/${encodeURIComponent(id)}/accept`, { body });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/accept`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Accepted. Job is now in_progress.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2457,7 +3833,7 @@ async function cmdJobsReject(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const body: Record<string, any> = { reason };
   if (applicationId) body.applicationId = applicationId;
   if (agentId) body.agentId = agentId;
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/reject`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/reject`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Application rejected.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2469,7 +3845,7 @@ async function cmdJobsSubmissions(deps: Deps, parsed: ParsedArgs, globals: Parse
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs submissions <jobId>");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/jobs/${encodeURIComponent(id)}/submissions`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/submissions`);
   if (globals.json) return printJson(deps, data);
   // Pretty-print: requirement scaffold first, then each submission.
   const submissions: any[] = Array.isArray(data) ? data : (data.submissions ?? []);
@@ -2492,11 +3868,11 @@ async function cmdJobsComplete(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
   const client = new HttpClient(deps, cfg);
   let body: Record<string, unknown> | undefined;
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     const attachmentIds = await stageFiles(client, deps, files, "message", `draft:msg:${me.id}:job:${id}`);
     body = { attachmentIds };
   }
-  const result = await client.request("PATCH", `/api/jobs/${encodeURIComponent(id)}/complete`, body ? { body } : {});
+  const result = await client.request("PATCH", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/complete`, body ? { body } : {});
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Job completed. Escrow released to worker.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2514,10 +3890,10 @@ async function cmdJobsRequestRevision(deps: Deps, parsed: ParsedArgs, globals: P
   const body: Record<string, any> = { notes };
   if (submissionId) body.submissionId = submissionId;
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "message", `draft:msg:${me.id}:job:${id}`);
   }
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/request-revision`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/request-revision`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Revision requested. Job back to in_progress.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2530,7 +3906,7 @@ async function cmdJobsRejectSubmission(deps: Deps, parsed: ParsedArgs, globals: 
   if (!id) throw new CliError("Usage: openjobs jobs reject-submission <jobId> --reason <s>");
   const reason = requireString(parsed.flags, "reason");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/reject-submission`, { body: { reason } });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/reject-submission`, { body: { reason } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Submission rejected.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2546,10 +3922,10 @@ async function cmdJobsDispute(deps: Deps, parsed: ParsedArgs, globals: ParsedFla
   const client = new HttpClient(deps, cfg);
   const body: Record<string, unknown> = { reason };
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "message", `draft:msg:${me.id}:job:${id}`);
   }
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/dispute`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/dispute`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Dispute opened.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2565,10 +3941,10 @@ async function cmdJobsMessage(deps: Deps, parsed: ParsedArgs, globals: ParsedFla
   const client = new HttpClient(deps, cfg);
   const body: Record<string, unknown> = { content };
   if (files.length > 0) {
-    const me = await client.request<any>("GET", "/api/agents/me");
+    const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
     body.attachmentIds = await stageFiles(client, deps, files, "message", `draft:msg:${me.id}:job:${id}`);
   }
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/messages`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/messages`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Message sent.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2580,7 +3956,7 @@ async function cmdJobsMessages(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs messages <jobId>");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/jobs/${encodeURIComponent(id)}/messages`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/messages`);
   const rows: any[] = Array.isArray(data) ? data : (data.messages ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "createdAt", "senderId", "content"], { maxCol: 80 });
@@ -2592,7 +3968,7 @@ async function cmdJobsWorkspace(deps: Deps, parsed: ParsedArgs, globals: ParsedF
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs workspace <jobId>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("GET", `/api/jobs/${encodeURIComponent(id)}/workspace`);
+  const result = await client.request("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/workspace`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -2603,7 +3979,7 @@ async function cmdJobsProposalAccept(deps: Deps, parsed: ParsedArgs, globals: Pa
   const [jobId, messageId] = parsed._;
   if (!jobId || !messageId) throw new CliError("Usage: openjobs jobs proposal-accept <jobId> <messageId>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(jobId)}/proposals/${encodeURIComponent(messageId)}/accept`);
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(jobId)}/proposals/${encodeURIComponent(messageId)}/accept`);
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Proposal accepted.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2615,7 +3991,7 @@ async function cmdJobsProposalDecline(deps: Deps, parsed: ParsedArgs, globals: P
   const [jobId, messageId] = parsed._;
   if (!jobId || !messageId) throw new CliError("Usage: openjobs jobs proposal-decline <jobId> <messageId> [--reason <s>]");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(jobId)}/proposals/${encodeURIComponent(messageId)}/decline`, { body: { reason: optString(parsed.flags, "reason") } });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(jobId)}/proposals/${encodeURIComponent(messageId)}/decline`, { body: { reason: optString(parsed.flags, "reason") } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Proposal declined.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2629,7 +4005,7 @@ async function cmdJobsCheckpoint(deps: Deps, parsed: ParsedArgs, globals: Parsed
   const label = requireString(parsed.flags, "label");
   const content = requireString(parsed.flags, "content");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/checkpoints`, { body: { label, content } });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/checkpoints`, { body: { label, content } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Checkpoint posted.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2641,7 +4017,7 @@ async function cmdJobsCheckpoints(deps: Deps, parsed: ParsedArgs, globals: Parse
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs checkpoints <jobId>");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/jobs/${encodeURIComponent(id)}/checkpoints`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/checkpoints`);
   const rows: any[] = Array.isArray(data) ? data : (data.checkpoints ?? data.items ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["id", "checkpointNumber", "status", "label", "createdAt"], { maxCol: 60 });
@@ -2676,7 +4052,7 @@ async function cmdJobsStatus(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs status <jobId>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("GET", `/api/jobs/${encodeURIComponent(id)}/status`);
+  const result = await client.request("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/status`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -2689,7 +4065,7 @@ async function cmdJobsReview(deps: Deps, parsed: ParsedArgs, globals: ParsedFlag
   const rating = optInt(parsed.flags, "rating");
   if (rating === undefined || rating < 1 || rating > 5) throw new CliError("--rating must be an integer from 1 to 5");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/jobs/${encodeURIComponent(id)}/reviews`, { body: { rating, comment: optString(parsed.flags, "comment") } });
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/reviews`, { body: { rating, comment: optString(parsed.flags, "comment") } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Review submitted.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -2700,10 +4076,22 @@ async function cmdJobsReviews(deps: Deps, parsed: ParsedArgs, globals: ParsedFla
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs jobs reviews <jobId>");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/jobs/${encodeURIComponent(id)}/reviews`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/reviews`);
   const rows: any[] = Array.isArray(data) ? data : (data.reviews ?? data.items ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["id", "reviewerId", "revieweeId", "rating", "comment"], { maxCol: 60 });
+}
+
+async function cmdJobsBoost(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`jobs boost` requires authentication.");
+  const id = parsed._[0];
+  if (!id) throw new CliError("Usage: openjobs jobs boost <jobId>");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("POST", `${API_BASE_PATH}/jobs/${encodeURIComponent(id)}/boost`, { idempotencyKey: randomUuid() });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ Job boosted.\n`);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
 
 // ─── Command: inbox ───────────────────────────────────────────────────
@@ -2740,7 +4128,7 @@ async function cmdInbox(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): P
   if (threadType) query.threadType = threadType;
   if (limit) query.limit = limit;
 
-  const data = await client.request<any>("GET", "/api/inbox", { query });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/inbox`, { query });
   if (globals.json) return printJson(deps, data);
 
   const threads: any[] = Array.isArray(data) ? data : (data.threads ?? []);
@@ -2770,6 +4158,22 @@ async function cmdInbox(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): P
   );
 }
 
+async function cmdInboxReply(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`inbox reply` requires authentication.");
+  const threadId = parsed._[0];
+  if (!threadId) throw new CliError("Usage: openjobs inbox reply <threadId> --content <s> [--subject <s>]");
+  const content = requireString(parsed.flags, "content");
+  const subject = optString(parsed.flags, "subject");
+  const client = new HttpClient(deps, cfg);
+  const body: Record<string, unknown> = { content };
+  if (subject) body.subject = subject;
+  const result = await client.request("POST", `${API_BASE_PATH}/inbox/${encodeURIComponent(threadId)}/reply`, { body });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout("✔ Reply sent.\n");
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
 async function cmdInboxRead(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`inbox read` requires authentication.");
@@ -2785,7 +4189,7 @@ async function cmdInboxRead(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
   if (peerId) query.threadType = "dm";
   if (threadType) query.threadType = threadType;
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("PATCH", `/api/inbox/${encodeURIComponent(pathId)}/read`, { query });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/inbox/${encodeURIComponent(pathId)}/read`, { query });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Inbox thread marked read.\n");
 }
@@ -2793,7 +4197,7 @@ async function cmdInboxRead(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
 async function cmdEventsStream(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`events stream` requires authentication.");
-  const url = new URL("/api/events/stream", cfg.baseUrl);
+  const url = new URL(`${API_BASE_PATH}/events/stream`, cfg.baseUrl);
   const headers: Record<string, string> = {
     "user-agent": `openjobs-cli/${CLI_VERSION}`,
     "accept": "text/event-stream",
@@ -2831,7 +4235,7 @@ async function cmdTasksList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
   const status = optString(parsed.flags, "status") ?? "unread";
   const limit = optInt(parsed.flags, "limit");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/agents/tasks", { query: { status, limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/agents/tasks`, { query: { status, limit } });
   if (globals.json) return printJson(deps, data);
   // The command-center response is { actionable: {...}, tasks: [...] }.
   // Print a compact summary then the task rows.
@@ -2853,7 +4257,7 @@ async function cmdTasksRead(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags
   const body: Record<string, any> = { status: "read" };
   if (reason) body.reason = reason;
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("PATCH", `/api/agents/tasks/${encodeURIComponent(id)}`, { body });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/agents/tasks/${encodeURIComponent(id)}`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Marked ${id} as read${reason ? ` (${reason})` : ""}.\n`);
 }
@@ -2867,7 +4271,7 @@ async function cmdWalletBalance(deps: Deps, parsed: ParsedArgs, globals: ParsedF
   const query: Record<string, string> = {};
   if (currency) query.currency = currency.toUpperCase();
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/wallet/balance", { query });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/wallet/balance`, { query });
   if (globals.json) return printJson(deps, data);
   const balances: any[] = Array.isArray(data.balances) && data.balances.length > 0
     ? data.balances
@@ -2913,7 +4317,7 @@ async function cmdWalletOnchainBalance(deps: Deps, parsed: ParsedArgs, globals: 
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`wallet onchain-balance` requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/wallet/balance", { query: {} });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/wallet/balance`, { query: {} });
   const onchain = data.onchain ?? {
     wallet: data.solanaWallet ?? null,
     available: false,
@@ -2944,7 +4348,7 @@ async function cmdWalletTransactions(deps: Deps, _parsed: ParsedArgs, globals: P
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`wallet transactions` requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/wallet/transactions");
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/wallet/transactions`);
   const rows: any[] = Array.isArray(data) ? data : (data.transactions ?? data.items ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["id", "type", "currency", "amount", "description", "createdAt"], { maxCol: 60 });
@@ -2954,7 +4358,7 @@ async function cmdWalletSummary(deps: Deps, _parsed: ParsedArgs, globals: Parsed
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`wallet summary` requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request<any>("GET", "/api/wallet/summary");
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/wallet/summary`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).filter(([k]) => k !== "recentTransactions").map(([k, v]) => [k, stringify(v)]));
   if (Array.isArray(result.recentTransactions)) {
@@ -2987,7 +4391,7 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
       throw new CliError("--amount must be a positive number.");
     }
     const keypair = await resolveDepositKeypair(deps, parsed, globals, cfg);
-    const prepared = await client.request<any>("POST", "/api/wallet/deposit/prepare", {
+    const prepared = await client.request<any>("POST", `${API_BASE_PATH}/wallet/deposit/prepare`, {
       body: { amount, currency },
     });
     const signerPubkey = keypair.publicKey.toBase58();
@@ -3001,7 +4405,7 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
     const tx = Transaction.from(Buffer.from(String(prepared.serializedTransaction), "base64"));
     tx.partialSign(keypair);
     const signedTransaction = tx.serialize().toString("base64");
-    const result = await client.request("POST", "/api/wallet/deposit/submit", {
+    const result = await client.request("POST", `${API_BASE_PATH}/wallet/deposit/submit`, {
       body: { signedTransaction, currency },
       timeoutMs: 60_000,
     });
@@ -3015,7 +4419,7 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
     throw new CliError("Usage: openjobs wallet deposit (--amount <n> | --tx <sig>) [--currency WAGE|USDC]");
   }
 
-  const result = await client.request("POST", "/api/wallet/deposit", {
+  const result = await client.request("POST", `${API_BASE_PATH}/wallet/deposit`, {
     body: { txSignature, currency },
   });
   if (globals.json) return printJson(deps, result);
@@ -3026,7 +4430,7 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
 async function cmdTreasury(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   const client = new HttpClient(deps, cfg);
-  const result = await client.request<any>("GET", "/api/treasury");
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/treasury`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, [
     ["network", String(result.network ?? "")],
@@ -3045,7 +4449,7 @@ async function cmdAttachmentsList(deps: Deps, parsed: ParsedArgs, globals: Parse
   const entityType = requireString(parsed.flags, "entity-type");
   const entityId = requireString(parsed.flags, "entity-id");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", `/api/attachments/entity/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`);
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/attachments/entity/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`);
   const rows: any[] = Array.isArray(data) ? data : (data.attachments ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["id", "filename", "mimeType", "sizeBytes", "visibility", "createdAt"], { maxCol: 60 });
@@ -3069,7 +4473,7 @@ async function cmdAttachmentsDownload(deps: Deps, parsed: ParsedArgs, globals: P
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs attachments download <attachment-id> [--out <path>]");
   const outPath = optString(parsed.flags, "out") ?? `${id}.bin`;
-  const url = new URL(`/api/attachments/${encodeURIComponent(id)}/download`, cfg.baseUrl);
+  const url = new URL(`${API_BASE_PATH}/attachments/${encodeURIComponent(id)}/download`, cfg.baseUrl);
   const headers: Record<string, string> = { "user-agent": `openjobs-cli/${CLI_VERSION}` };
   if (cfg.apiKey) headers["x-api-key"] = cfg.apiKey;
   if (cfg.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
@@ -3092,7 +4496,7 @@ async function cmdAttachmentsVisibility(deps: Deps, parsed: ParsedArgs, globals:
   if (!id) throw new CliError("Usage: openjobs attachments visibility <attachment-id> --visibility public|worker_only|private");
   const visibility = requireString(parsed.flags, "visibility");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("PATCH", `/api/attachments/${encodeURIComponent(id)}/visibility`, { body: { visibility } });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/attachments/${encodeURIComponent(id)}/visibility`, { body: { visibility } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Visibility updated.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3111,7 +4515,7 @@ async function cmdAttachmentsDelete(deps: Deps, parsed: ParsedArgs, globals: Par
     }
   }
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("DELETE", `/api/attachments/${encodeURIComponent(id)}`);
+  const result = await client.request("DELETE", `${API_BASE_PATH}/attachments/${encodeURIComponent(id)}`);
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Deleted ${id}\n`);
 }
@@ -3119,7 +4523,7 @@ async function cmdAttachmentsDelete(deps: Deps, parsed: ParsedArgs, globals: Par
 async function cmdTemplatesList(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/job-templates");
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/job-templates`);
   const rows: any[] = Array.isArray(data) ? data : (data.templates ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["slug", "category", "title", "complexityBand"], { maxCol: 60 });
@@ -3130,7 +4534,7 @@ async function cmdTemplatesGet(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
   const slug = parsed._[0];
   if (!slug) throw new CliError("Usage: openjobs templates get <slug>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("GET", `/api/job-templates/${encodeURIComponent(slug)}`);
+  const result = await client.request("GET", `${API_BASE_PATH}/job-templates/${encodeURIComponent(slug)}`);
   if (globals.json) return printJson(deps, result);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -3138,7 +4542,7 @@ async function cmdTemplatesGet(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
 async function cmdSkillsList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/skills", { query: { q: optString(parsed.flags, "q"), category: optString(parsed.flags, "category"), limit: optInt(parsed.flags, "limit") } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/skills`, { query: { q: optString(parsed.flags, "q"), category: optString(parsed.flags, "category"), limit: optInt(parsed.flags, "limit") } });
   const rows: any[] = Array.isArray(data) ? data : (data.items ?? []);
   if (globals.json) return printJson(deps, data);
   printTable(deps, rows, ["slug", "displayName", "category"], { maxCol: 60 });
@@ -3148,8 +4552,41 @@ async function cmdSkillsResolve(deps: Deps, parsed: ParsedArgs, globals: ParsedF
   const cfg = resolveConfig(deps, globals);
   const inputs = csv(requireString(parsed.flags, "inputs")) ?? [];
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/skills/resolve", { body: { inputs } });
+  const result = await client.request("POST", `${API_BASE_PATH}/skills/resolve`, { body: { inputs } });
   if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdWalletVerify(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`wallet verify` requires authentication.");
+  const multi = loadMultiConfig(deps);
+  const active = globals.agentname ?? multi.currentAgent;
+  const entry = active ? multi.agents[active] : undefined;
+  if (!entry?.walletSecretKey) {
+    throw new CliError(
+      "No wallet secret stored locally for the active profile.\n" +
+      "  wallet verify signs a server challenge with the ed25519 key; it requires the wallet secret stored at registration time.\n" +
+      "  If you do not have the secret, register a new agent via `openjobs agents register`.",
+    );
+  }
+  const client = new HttpClient(deps, cfg);
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
+  if (!me.solanaWallet) throw new CliError("Your agent has no wallet address on file. Use `openjobs wallet deposit` to set one first.");
+  // Step 1: obtain challenge nonce
+  const challengeResult = await client.request<any>("POST", `${API_BASE_PATH}/auth/challenge`, { body: { wallet: me.solanaWallet } });
+  const nonce: string = challengeResult.nonce ?? challengeResult.challenge;
+  if (!nonce) throw new CliError("Failed to obtain challenge nonce from server.");
+  // Step 2: sign nonce with local ed25519 key
+  const keypair = keypairFromWalletSecret(entry.walletSecretKey);
+  const messageBytes = new TextEncoder().encode(nonce);
+  const sig = nacl.sign.detached(messageBytes, keypair.secretKey);
+  const bs58 = await import("bs58");
+  const walletSignature = bs58.default.encode(sig);
+  // Step 3: submit verification
+  const result = await client.request<any>("POST", `${API_BASE_PATH}/wallet/verify`, { body: { walletSignature, nonce } });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout("✔ Wallet ownership verified.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
 
@@ -3164,7 +4601,7 @@ async function cmdPayoutsWithdraw(deps: Deps, parsed: ParsedArgs, globals: Parse
   const body: Record<string, unknown> = { currency };
   if (amount !== undefined) body.amount = amount;
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/payouts/withdraw", { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/payouts/withdraw`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Withdrawal submitted (${currency}).\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3627,7 +5064,7 @@ async function cmdFaucetStatus(deps: Deps, _parsed: ParsedArgs, globals: ParsedF
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`faucet status` requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/faucet/status");
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/faucet/status`);
   if (globals.json) return printJson(deps, data);
   printKv(deps, [
     ["lifetime total", String(data.lifetimeTotal ?? "")],
@@ -3641,12 +5078,104 @@ async function cmdFaucetStatus(deps: Deps, _parsed: ParsedArgs, globals: ParsedF
   ]);
 }
 
+// ─── Commands: judges ────────────────────────────────────────────────
+
+async function cmdJudgesStatus(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`judges status` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("GET", `${API_BASE_PATH}/judges/stake`);
+  if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdJudgesStake(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`judges stake` requires authentication.");
+  const tier = requireString(parsed.flags, "tier");
+  if (!["junior", "senior", "lead"].includes(tier)) throw new CliError("--tier must be one of: junior, senior, lead");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("POST", `${API_BASE_PATH}/judges/stake`, { body: { tier }, idempotencyKey: randomUuid() });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message ?? `Staked as ${tier} judge.`}\n`);
+  printKv(deps, Object.entries((result as any).stake ?? {}).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdJudgesUnstake(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`judges unstake` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("POST", `${API_BASE_PATH}/judges/unstake`);
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message ?? "Judge stake removed."}\n`);
+  if ((result as any).returnedAmount !== undefined) deps.stdout(`  Returned: ${(result as any).returnedAmount} WAGE\n`);
+}
+
+// ─── Commands: platform info ──────────────────────────────────────────
+
+async function cmdPlatformStats(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("GET", `${API_BASE_PATH}/stats`);
+  if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdPlatformStatus(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("GET", `${API_BASE_PATH}/status`);
+  if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdEmissionConfig(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("GET", `${API_BASE_PATH}/emission/config`);
+  if (globals.json) return printJson(deps, result);
+  printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdReferrals(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`referrals` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("GET", `${API_BASE_PATH}/referrals`);
+  if (globals.json) return printJson(deps, result);
+  const r = result as any;
+  deps.stdout(`Referral code: ${r.referralCode ?? "none"}\n`);
+  if (r.referredBy) deps.stdout(`Referred by:   ${r.referredBy}\n`);
+  const given: any[] = r.referralsGiven ?? [];
+  if (given.length > 0) {
+    deps.stdout(`\nAgents referred (${given.length}):\n`);
+    printTable(deps, given, ["referredAgentId", "status", "rewardAmount", "createdAt"], { maxCol: 30 });
+  } else {
+    deps.stdout("No referrals given yet.\n");
+  }
+}
+
+async function cmdFeedback(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`feedback` requires authentication.");
+  const type = requireString(parsed.flags, "type");
+  const subject = requireString(parsed.flags, "subject");
+  const message = requireString(parsed.flags, "message");
+  const validTypes = ["feature_request", "bug_report", "feedback", "issue"];
+  if (!validTypes.includes(type)) throw new CliError(`--type must be one of: ${validTypes.join(", ")}`);
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request("POST", `${API_BASE_PATH}/feedback`, { body: { type, subject, message } });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ ${(result as any).message ?? "Feedback submitted."}\n`);
+  if ((result as any).id) deps.stdout(`  ID: ${(result as any).id}\n`);
+}
+
 async function cmdFaucetClaim(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("`faucet claim` requires authentication.");
   const trigger = requireString(parsed.flags, "trigger");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/faucet/claim", { body: { trigger } });
+  const result = await client.request("POST", `${API_BASE_PATH}/faucet/claim`, { body: { trigger } });
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Claimed faucet trigger "${trigger}".\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3664,11 +5193,11 @@ async function cmdAgentsDm(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   const client = new HttpClient(deps, cfg);
   // The server enforces "send-as-yourself", so we POST to /api/agents/<self.id>/messages.
   // Look up our own id once via /api/agents/me.
-  const me = await client.request<any>("GET", "/api/agents/me");
+  const me = await client.request<any>("GET", `${API_BASE_PATH}/agents/me`);
   if (!me?.id) throw new CliError("Could not resolve your agent id from /api/agents/me");
   const body: Record<string, any> = { recipientId, content };
   if (subject) body.subject = subject;
-  const result = await client.request("POST", `/api/agents/${encodeURIComponent(me.id)}/messages`, { body });
+  const result = await client.request("POST", `${API_BASE_PATH}/agents/${encodeURIComponent(me.id)}/messages`, { body });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ DM sent.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3680,7 +5209,7 @@ async function cmdWebhooksList(deps: Deps, _parsed: ParsedArgs, globals: ParsedF
   const cfg = resolveConfig(deps, globals);
   if (!cfg.apiKey) throw new CliError("Listing webhooks requires authentication.");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/webhooks/endpoints");
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/webhooks/endpoints`);
   const rows: any[] = Array.isArray(data) ? data : (data.endpoints ?? data.items ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "url", "events", "status", "description"], { maxCol: 50 });
@@ -3694,7 +5223,7 @@ async function cmdWebhooksCreate(deps: Deps, parsed: ParsedArgs, globals: Parsed
   if (!events || events.length === 0) throw new CliError("Missing required --events (comma-separated, or '*' for all)");
   const description = optString(parsed.flags, "description");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/webhooks/endpoints", { body: { url, events, description } });
+  const result = await client.request("POST", `${API_BASE_PATH}/webhooks/endpoints`, { body: { url, events, description } });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Endpoint created. SAVE THE SECRET — it is never shown again.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3712,7 +5241,7 @@ async function cmdWebhooksUpdate(deps: Deps, parsed: ParsedArgs, globals: Parsed
   const description = optString(parsed.flags, "description"); if (description) patch.description = description;
   if (Object.keys(patch).length === 0) throw new CliError("Nothing to update — pass at least one of --url --events --status --description");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("PATCH", `/api/webhooks/endpoints/${encodeURIComponent(id)}`, { body: patch });
+  const result = await client.request("PATCH", `${API_BASE_PATH}/webhooks/endpoints/${encodeURIComponent(id)}`, { body: patch });
   if (globals.json) return printJson(deps, result);
   deps.stdout("✔ Endpoint updated.\n");
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3731,7 +5260,7 @@ async function cmdWebhooksDelete(deps: Deps, parsed: ParsedArgs, globals: Parsed
     }
   }
   const client = new HttpClient(deps, cfg);
-  await client.request("DELETE", `/api/webhooks/endpoints/${encodeURIComponent(id)}`);
+  await client.request("DELETE", `${API_BASE_PATH}/webhooks/endpoints/${encodeURIComponent(id)}`);
   deps.stdout(`✔ Deleted ${id}\n`);
 }
 
@@ -3741,7 +5270,7 @@ async function cmdWebhooksDeliveries(deps: Deps, parsed: ParsedArgs, globals: Pa
   const status = optString(parsed.flags, "status");
   const limit = optInt(parsed.flags, "limit");
   const client = new HttpClient(deps, cfg);
-  const data = await client.request<any>("GET", "/api/webhooks/deliveries", { query: { status, limit } });
+  const data = await client.request<any>("GET", `${API_BASE_PATH}/webhooks/deliveries`, { query: { status, limit } });
   const rows: any[] = Array.isArray(data) ? data : (data.deliveries ?? []);
   if (globals.json) return printJson(deps, rows);
   printTable(deps, rows, ["id", "event", "url", "status", "attempts", "lastHttpStatus", "createdAt"], { maxCol: 40 });
@@ -3753,7 +5282,7 @@ async function cmdWebhooksReplay(deps: Deps, parsed: ParsedArgs, globals: Parsed
   const id = parsed._[0];
   if (!id) throw new CliError("Usage: openjobs webhooks replay <delivery-id>");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", `/api/webhooks/deliveries/${encodeURIComponent(id)}/retry`);
+  const result = await client.request("POST", `${API_BASE_PATH}/webhooks/deliveries/${encodeURIComponent(id)}/retry`);
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Re-queued ${id}\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3786,7 +5315,7 @@ async function cmdWebhooksTail(deps: Deps, parsed: ParsedArgs, globals: ParsedFl
     iter++;
     let data: any;
     try {
-      data = await client.request("GET", "/api/webhooks/deliveries", { query: { status, limit } });
+      data = await client.request("GET", `${API_BASE_PATH}/webhooks/deliveries`, { query: { status, limit } });
     } catch (err: any) {
       deps.stderr(`tail: ${err.message ?? err}\n`);
       await deps.sleep(intervalSeconds * 1000);
@@ -3818,7 +5347,7 @@ async function cmdSandboxStatus(deps: Deps, _parsed: ParsedArgs, globals: Parsed
   const cfgIn = { ...globals, env: globals.env ?? "sandbox" as const };
   const cfg = resolveConfig(deps, cfgIn);
   const client = new HttpClient(deps, cfg);
-  const status = await client.request("GET", "/api/sandbox/status");
+  const status = await client.request("GET", `${API_BASE_PATH}/sandbox/status`);
   if (globals.json) return printJson(deps, status);
   printKv(deps, Object.entries(status as any).map(([k, v]) => [k, stringify(v)]));
 }
@@ -3830,7 +5359,7 @@ async function cmdSandboxFaucet(deps: Deps, parsed: ParsedArgs, globals: ParsedF
   const amount = optInt(parsed.flags, "amount");
   const reason = optString(parsed.flags, "reason");
   const client = new HttpClient(deps, cfg);
-  const result = await client.request("POST", "/api/sandbox/faucet", { body: { amount, reason } });
+  const result = await client.request("POST", `${API_BASE_PATH}/sandbox/faucet`, { body: { amount, reason } });
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Minted tWAGE.\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
@@ -3966,7 +5495,7 @@ async function fetchApiMetadata(deps: Deps, baseUrl: string): Promise<{
   try {
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), 5000);
-    const res = await deps.fetch(new URL("/api/cli/version", baseUrl).toString(), {
+    const res = await deps.fetch(new URL(`${API_BASE_PATH}/cli/version`, baseUrl).toString(), {
       headers: { "user-agent": `openjobs-cli/${CLI_VERSION}`, "accept": "application/json" },
       signal: ac.signal,
     } as any);
@@ -4670,7 +6199,7 @@ export async function run(argv: string[], depsIn?: Partial<Deps>): Promise<void>
       // (e.g. a 429 on `jobs apply` has nothing to do with post quotas).
       if (err.status === 429) {
         const retryAfterSec = Number(err.body?.retryAfter);
-        const isJobPost = err.path === "/api/jobs";
+        const isJobPost = err.path === `${API_BASE_PATH}/jobs`;
         const quotaTip = isJobPost
           ? ` Tip: validation errors no longer consume your quota — only successful posts do.`
           : "";
@@ -4685,7 +6214,7 @@ export async function run(argv: string[], depsIn?: Partial<Deps>): Promise<void>
       // operator that the attempt did NOT consume their hourly job
       // quota (true since server-side `skipFailedRequests: true`).
       // Keeps fast-iteration on the same idempotency key safe.
-      if (err.status === 400 && err.path === "/api/jobs") {
+      if (err.status === 400 && err.path === `${API_BASE_PATH}/jobs`) {
         deps.stderr(`\nNote: this 400 did NOT consume your job-posting quota. Fix the input and retry immediately.\n`);
       }
       // P3 echo — if the server set the legacy-field hint, surface it
