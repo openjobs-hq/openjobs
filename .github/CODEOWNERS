@@ -1,0 +1,6 @@
+# Default owner for everything in this repository.
+# Combined with branch protection ("Require review from Code Owners"
+# on main), this means no change can merge without @cchacons approval,
+# and the release workflow, release script, and package manifests can
+# only change with the release owner's sign-off.
+* @cchacons

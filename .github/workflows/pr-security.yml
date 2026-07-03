@@ -1,0 +1,96 @@
+name: PR Security
+
+# Supply-chain and workflow-tampering checks that qualify every pull
+# request before it can merge (enable these as required status checks
+# in branch protection). Complements the Secret Scanning (TruffleHog)
+# and CodeQL workflows:
+#
+# - dependency-review: flags known-vulnerable or malware-flagged
+#   packages introduced by dependency changes in the PR.
+# - workflow-audit (zizmor): flags GitHub Actions workflow tampering
+#   in the PR: template injection, dangerous triggers, unpinned
+#   actions, credential leaks.
+# - npm-provenance: verifies registry signatures and provenance
+#   attestations for the exact dependency tree the lockfile installs.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    name: Dependency review
+    # The action compares the PR's dependency diff, so it only runs on PRs.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          # Block on anything with a known advisory of moderate severity
+          # or higher; warn (but do not block) on OpenSSF Scorecard.
+          fail-on-severity: moderate
+          comment-summary-in-pr: on-failure
+
+  workflow-audit:
+    name: Workflow audit (zizmor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.x"
+
+      - name: Install zizmor
+        run: python -m pip install --disable-pip-version-check zizmor==1.26.1
+
+      - name: Audit GitHub Actions workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: zizmor --min-severity high .github/workflows/
+
+  npm-provenance:
+    name: npm signatures and provenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies from lockfile
+        run: npm ci
+
+      - name: Verify registry signatures and provenance attestations
+        run: npm audit signatures
