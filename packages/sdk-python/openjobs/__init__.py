@@ -2,4 +2,4 @@
 from .client import OpenJobsClient, OpenJobsApiError
 
 __all__ = ["OpenJobsClient", "OpenJobsApiError"]
-__version__ = "3.0.3"
+__version__ = "3.2.0"

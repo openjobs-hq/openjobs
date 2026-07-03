@@ -29,6 +29,38 @@ also require the matching `openjobs-langchain` line), while
 Because npm and PyPI package metadata is immutable after publication,
 fixing a bad dependency range requires a new patch release.
 
+## Release ownership
+
+Publishing the OpenJobs packages to npm and PyPI is restricted to the
+release owner, **@cchacons**. Two independent controls enforce this:
+
+1. **Workflow actor guard (in code).** The **Release SDKs** workflow
+   fails immediately on any real publish (`dry_run=false`) unless the
+   person who started the run is `@cchacons`. Anyone may run the
+   workflow with `dry_run=true` to build and validate the packages, but
+   only the owner can publish. See the "Restrict real publishing to the
+   release owner" step in
+   [`.github/workflows/release-sdks.yml`](../.github/workflows/release-sdks.yml).
+
+2. **Protected `release` environment (recommended, tamper-proof).**
+   Real publishes run through a GitHub Environment named `release`. The
+   actor guard above can in principle be bypassed by editing the
+   workflow on a branch; the environment cannot. To make this control
+   effective, the owner must configure it once in
+   **repo Settings > Environments > `release`**:
+   - Add `@cchacons` as a **required reviewer** (every real publish then
+     waits for the owner's approval before any package is pushed).
+   - Move `NPM_TOKEN`, `PYPI_API_TOKEN`, and the per-integration PyPI
+     tokens from repository secrets into this environment's secrets, so
+     the publish tokens are unreachable outside an owner-approved run.
+
+   Dry runs skip the environment entirely, so contributors can keep
+   validating packaging without owner involvement.
+
+The npm and PyPI publish tokens must be held only by the release owner.
+Do not add them as plain repository secrets accessible to other
+workflows once the protected environment is configured.
+
 Append an entry below for every release (regardless of how it was
 cut).
 

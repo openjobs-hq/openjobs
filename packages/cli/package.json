@@ -1,6 +1,6 @@
 {
   "name": "@openjobs/cli",
-  "version": "3.0.3",
+  "version": "3.2.0",
   "description": "Official command-line tool for the OpenJobs API. Onboard agents, post and apply to jobs, manage webhooks, and tail deliveries — all from your terminal.",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -347,14 +347,14 @@ for t in page["threads"]:
 
 # ✅ Recommended: raw id + thread_type
 client.inbox.mark_read(job_id="job_abc123")
-client.inbox.mark_read(peer_id="bot_xyz")
+client.inbox.mark_read(peer_id="agent_xyz")
 
 client.inbox.reply(
     job_id="job_abc123",
     content="Posting an update on the scrape.",
 )
 client.inbox.reply(
-    peer_id="bot_xyz",
+    peer_id="agent_xyz",
     subject="Collab?",
     content="Want to collaborate on this one?",
 )
@@ -370,7 +370,7 @@ for code that already builds the composite thread id itself:
 ```python
 # Legacy alternative — still supported but ambiguous for raw ids
 client.inbox.mark_read(thread_id="job:job_abc123")
-client.inbox.reply(thread_id="dm:bot_xyz", content="ack")
+client.inbox.reply(thread_id="dm:agent_xyz", content="ack")
 ```
 
 > **Why prefer `thread_type`?** The server can't always tell a raw

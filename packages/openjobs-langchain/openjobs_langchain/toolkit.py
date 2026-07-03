@@ -14,18 +14,33 @@ def get_worker_tools(client: OpenJobsClient) -> List[BaseTool]:
 
     Includes job discovery/application/inbox tools, wallet balance /
     treasury / transactions / deposit / withdraw tools, task tools,
-    attachment tools, templates, skills, reputation, and job workspace
-    helpers.
+    attachment tools, templates, skills, reputation, job workspace
+    helpers, DM / conversation tools, onboarding, platform info,
+    feedback, and judge staking.
     """
     from .tools import (
+        agent_conversation_tool,
+        agent_conversations_tool,
+        agent_oversight_tool,
         agent_reputation_tool,
         agent_reviews_tool,
+        agent_tasks_tool,
+        agent_unread_count_tool,
+        agent_webhook_deliveries_tool,
         apply_to_job_tool,
+        command_center_actions_tool,
         download_attachment_tool,
+        emission_config_tool,
+        feedback_tool,
         get_job_template_tool,
         get_job_tool,
+        get_my_profile_tool,
+        heartbeat_tool,
         job_status_tool,
         job_workspace_tool,
+        judge_stake_info_tool,
+        judge_stake_tool,
+        judge_unstake_tool,
         list_attachments_tool,
         list_inbox_tool,
         list_job_messages_tool,
@@ -37,11 +52,20 @@ def get_worker_tools(client: OpenJobsClient) -> List[BaseTool]:
         mark_task_read_tool,
         match_jobs_tool,
         mine_jobs_tool,
+        onboarding_start_tool,
+        onboarding_status_tool,
+        platform_stats_tool,
+        platform_status_tool,
         post_job_message_tool,
+        referrals_tool,
         reply_to_thread_tool,
         resolve_skills_tool,
         search_jobs_tool,
+        send_dm_tool,
+        set_agent_webhook_tool,
         submit_job_tool,
+        test_agent_webhook_tool,
+        update_agent_task_tool,
         upload_attachment_tool,
         wallet_balance_tool,
         wallet_deposit_tool,
@@ -89,6 +113,29 @@ def get_worker_tools(client: OpenJobsClient) -> List[BaseTool]:
         resolve_skills_tool(client),
         agent_reputation_tool(client),
         agent_reviews_tool(client),
+        get_my_profile_tool(client),
+        heartbeat_tool(client),
+        agent_conversations_tool(client),
+        agent_conversation_tool(client),
+        send_dm_tool(client),
+        agent_unread_count_tool(client),
+        agent_oversight_tool(client),
+        set_agent_webhook_tool(client),
+        test_agent_webhook_tool(client),
+        agent_webhook_deliveries_tool(client),
+        onboarding_start_tool(client),
+        onboarding_status_tool(client),
+        command_center_actions_tool(client),
+        agent_tasks_tool(client),
+        update_agent_task_tool(client),
+        platform_stats_tool(client),
+        platform_status_tool(client),
+        emission_config_tool(client),
+        referrals_tool(client),
+        feedback_tool(client),
+        judge_stake_info_tool(client),
+        judge_stake_tool(client),
+        judge_unstake_tool(client),
     ]
 
 
@@ -102,6 +149,7 @@ def get_poster_tools(client: OpenJobsClient) -> List[BaseTool]:
     from .tools import (
         accept_job_tool,
         accept_proposal_tool,
+        boost_job_tool,
         cancel_job_tool,
         checkpoint_review_tool,
         complete_job_tool,
@@ -143,6 +191,7 @@ def get_poster_tools(client: OpenJobsClient) -> List[BaseTool]:
         list_checkpoints_tool(client),
         update_attachment_visibility_tool(client),
         delete_attachment_tool(client),
+        boost_job_tool(client),
     ]
 
 

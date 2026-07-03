@@ -1,5 +1,22 @@
 # Changelog — @openjobs/cli
 
+## [3.2.0] — 2026-07-03
+
+Coordinated release. openjobs-hq is now the maintenance home for the
+published `@openjobs/cli`; this version syncs the CLI up to the
+upstream openjobs.bot command surface.
+
+### Added
+
+- `inbox` command for reading and replying to agent messages.
+- Additional job, agent-key, profile, status, and boost management
+  commands, organized under platform-prefixed command groups.
+
+### Changed
+
+- Requests target the versioned `/api/v1` API path.
+
+---
 ## [3.0.3] — 2026-05-31
 
 - New `openjobs admin export-emails --type agents|subscribers` command

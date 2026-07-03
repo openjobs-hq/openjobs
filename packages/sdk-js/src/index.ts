@@ -18,6 +18,1092 @@
  *
  * @packageDocumentation
  */
+// --- Public API surface (vendored) ---
+// Route allowlist of the published OpenJobs public API. Upstream this is
+// generated from the server route manifest; in this open-source repo it is
+// vendored as a static dataset. The client refuses requests to any path not
+// listed here, so admin/internal routes cannot be reached through the SDK.
+
+type PublicSurfaceRoute = { method: string; path: string };
+
+const PUBLIC_SURFACE_ROUTES = [
+  {
+    "method": "DELETE",
+    "path": "/api/attachments/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/jobs/:id/apply"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/attachments/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/jobs/:id/apply"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/webhooks/endpoints/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/webhooks/endpoints/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/conversations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/conversations/:peerId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/messages/unread-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/onboarding/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/reputation"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/:id/webhook/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/by-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/check-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me/feed"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/attachments/:id/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/attachments/entity/:entityType/:entityId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/claim/:code"
+  },
+  {
+    "method": "GET",
+    "path": "/api/cli/version"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/emission/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/events/stream"
+  },
+  {
+    "method": "GET",
+    "path": "/api/faucet/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/job-templates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/job-templates/:slug"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/applications"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/submissions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:id/workspace"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/match"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/mine"
+  },
+  {
+    "method": "GET",
+    "path": "/api/jobs/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/og/job/:id.png"
+  },
+  {
+    "method": "GET",
+    "path": "/api/openapi.json"
+  },
+  {
+    "method": "GET",
+    "path": "/api/referrals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/sandbox/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/skills"
+  },
+  {
+    "method": "GET",
+    "path": "/api/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/conversations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/conversations/:peerId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/messages/unread-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/onboarding/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/reputation"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/:id/webhook/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/by-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/check-agentname/:agentname"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me/feed"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/tasks"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attachments/:id/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/attachments/entity/:entityType/:entityId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/claim/:code"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cli/version"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/emission/config"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/events/stream"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/faucet/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/job-templates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/job-templates/:slug"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/applications"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/messages"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/reviews"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/submissions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:id/workspace"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/match"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/mine"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/jobs/search"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/openapi.json"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/referrals"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sandbox/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/skills"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/stats"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/status"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallet/transactions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/webhooks/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/transactions"
+  },
+  {
+    "method": "GET",
+    "path": "/api/webhooks/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/api/webhooks/endpoints"
+  },
+  {
+    "method": "GET",
+    "path": "/docs"
+  },
+  {
+    "method": "GET",
+    "path": "/heartbeat.md"
+  },
+  {
+    "method": "GET",
+    "path": "/jobs/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/robots.txt"
+  },
+  {
+    "method": "GET",
+    "path": "/sandbox"
+  },
+  {
+    "method": "GET",
+    "path": "/scripts/:file"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/changelog/python"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/changelog/typescript"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/python/CHANGELOG.md"
+  },
+  {
+    "method": "GET",
+    "path": "/sdks/typescript/CHANGELOG.md"
+  },
+  {
+    "method": "GET",
+    "path": "/sitemap.xml"
+  },
+  {
+    "method": "GET",
+    "path": "/skill.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill.tar.gz"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/HEARTBEAT.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/INSTALL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/COMMANDS.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/PROTOCOL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/references/SKILL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/install-heartbeat.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/refresh-skill.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/scripts/register-agent.sh"
+  },
+  {
+    "method": "GET",
+    "path": "/skill/SKILL.md"
+  },
+  {
+    "method": "GET",
+    "path": "/webhooks"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id/oversight"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/:id/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/agents/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/attachments/:id/visibility"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/inbox/:threadId/read"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id/accept"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:id/complete"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/jobs/:jobId/checkpoints/:checkpointId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id/oversight"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/:id/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/agents/tasks/:taskId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/attachments/:id/visibility"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/inbox/:threadId/read"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id/accept"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:id/complete"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/jobs/:jobId/checkpoints/:checkpointId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/webhooks/endpoints/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/webhooks/endpoints/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/onboarding/start"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/rotate-key"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/:id/webhook/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/command-center/actions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/heartbeat"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/quickstart"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/recover-key/confirm"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/recover-key/request"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/register"
+  },
+  {
+    "method": "POST",
+    "path": "/api/agents/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/attachments/:entityType/:entityId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/challenge"
+  },
+  {
+    "method": "POST",
+    "path": "/api/claim/:code/skip"
+  },
+  {
+    "method": "POST",
+    "path": "/api/claim/:code/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/faucet/claim"
+  },
+  {
+    "method": "POST",
+    "path": "/api/feedback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/inbox/:threadId/reply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/apply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/boost"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/dispute"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reject-submission"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/request-revision"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/reviews"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:id/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/proposals/:messageId/accept"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/:jobId/proposals/:messageId/decline"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/from-template/:slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/jobs/suggest"
+  },
+  {
+    "method": "POST",
+    "path": "/api/judges/stake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/judges/unstake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/notify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/payouts/wage"
+  },
+  {
+    "method": "POST",
+    "path": "/api/payouts/withdraw"
+  },
+  {
+    "method": "POST",
+    "path": "/api/sandbox/faucet"
+  },
+  {
+    "method": "POST",
+    "path": "/api/skills/resolve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/onboarding/start"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/rotate-key"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/:id/webhook/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/command-center/actions"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/heartbeat"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/quickstart"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/recover-key/confirm"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/recover-key/request"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/register"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/agents/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/attachments/:entityType/:entityId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/challenge"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/claim/:code/skip"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/claim/:code/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/faucet/claim"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/feedback"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inbox/:threadId/reply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/apply"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/boost"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/dispute"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/messages"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reject-submission"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/request-revision"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/reviews"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:id/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/checkpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/proposals/:messageId/accept"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/:jobId/proposals/:messageId/decline"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/from-template/:slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/jobs/suggest"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/judges/unstake"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/notify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payouts/wage"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/payouts/withdraw"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sandbox/faucet"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/skills/resolve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit/prepare"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/deposit/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/generate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/save"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallet/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/deliveries/:id/retry"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/deliveries/retry-all"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit/prepare"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/deposit/submit"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/generate"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/save"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/verify"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/deliveries/:id/retry"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/deliveries/retry-all"
+  },
+  {
+    "method": "POST",
+    "path": "/api/webhooks/endpoints"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/agents/:id/webhook"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/agents/:id/webhook"
+  }
+] as const satisfies readonly PublicSurfaceRoute[];
+
+function pathnameFrom(path: string): string {
+  try {
+    return new URL(path, "https://openjobs.bot").pathname;
+  } catch {
+    return path;
+  }
+}
+
+function pathMatches(pattern: string, pathname: string): boolean {
+  const regexSpecialChars = /[.*+?^${}()|[\]\\]/g;
+  const escaped = pattern
+    .split("/")
+    .map((segment) => {
+      if (segment.startsWith(":")) return "[^/]+";
+      if (segment === "*") return ".*";
+      return segment.replace(regexSpecialChars, "\\$&");
+    })
+    .join("/");
+  return new RegExp(`^${escaped}$`).test(pathname);
+}
+
+function isPublicSurfacePath(method: string, path: string): boolean {
+  const upperMethod = method.toUpperCase();
+  const pathname = pathnameFrom(path);
+  return PUBLIC_SURFACE_ROUTES.some((route) =>
+    route.method === upperMethod && pathMatches(route.path, pathname)
+  );
+}
+
+/**
+ * Version-prefixed base path for all public API endpoints.
+ * Change this constant when the API version is bumped.
+ */
+export const API_BASE_PATH = "/api/v1";
+
 interface CryptoLike { subtle: SubtleCrypto }
 const globalCrypto: CryptoLike | undefined =
   (globalThis as { crypto?: CryptoLike }).crypto;
@@ -130,6 +1216,34 @@ export class OpenJobsApiError extends Error {
 
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+function assertPublicSdkPath(method: string, path: string): void {
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(path) || path.startsWith("//")) {
+    throw new Error("OpenJobs SDK request paths must be relative to the configured baseUrl");
+  }
+  let pathname = path;
+  try {
+    pathname = new URL(path, "https://openjobs.bot").pathname;
+  } catch {
+    // Fall back to the raw string; URL construction should not fail for SDK paths.
+  }
+  if (!isPublicSurfacePath(method, pathname)) {
+    throw new Error(`This OpenJobs SDK only exposes the public API surface; refusing unknown path ${method.toUpperCase()} ${pathname}`);
+  }
+}
+
+function canonicalPublicApiPath(path: string): string {
+  let url: URL;
+  try {
+    url = new URL(path, "https://openjobs.bot");
+  } catch {
+    return path;
+  }
+  const pathname = url.pathname.startsWith("/api/") && !url.pathname.startsWith(`${API_BASE_PATH}/`)
+    ? `${API_BASE_PATH}/${url.pathname.slice("/api/".length)}`
+    : url.pathname;
+  return `${pathname}${url.search}`;
+}
+
 /**
  * Top-level entrypoint to the OpenJobs API.
  *
@@ -179,6 +1293,12 @@ export class OpenJobsClient {
   readonly discovery: DiscoveryApi;
   /** Realtime server-sent events. See {@link EventsApi}. */
   readonly events: EventsApi;
+  /** Dispute judge staking. See {@link JudgesApi}. */
+  readonly judges: JudgesApi;
+  /** Agent ownership claim flow. See {@link ClaimApi}. */
+  readonly claim: ClaimApi;
+  /** Platform status, stats, and utilities. See {@link PlatformApi}. */
+  readonly platform: PlatformApi;
 
   /**
    * @param opts See {@link OpenJobsClientOptions}. All fields optional.
@@ -203,6 +1323,9 @@ export class OpenJobsClient {
     this.attachments = new AttachmentsApi(this);
     this.discovery = new DiscoveryApi(this);
     this.events = new EventsApi(this);
+    this.judges = new JudgesApi(this);
+    this.claim = new ClaimApi(this);
+    this.platform = new PlatformApi(this);
   }
 
   /**
@@ -224,14 +1347,15 @@ export class OpenJobsClient {
    *
    * @example
    * ```ts
-   * const stats = await client.request<{ count: number }>(
+   * const jobs = await client.request<{ jobs: unknown[] }>(
    *   "GET",
-   *   "/api/admin/stats"
+   *   "/api/jobs"
    * );
    * ```
    */
   async request<T = any>(method: string, path: string, body?: any, opts: { idempotencyKey?: string; query?: Record<string, any> } = {}): Promise<T> {
-    const url = new URL(path, this.options.baseUrl);
+    assertPublicSdkPath(method, path);
+    const url = new URL(canonicalPublicApiPath(path), this.options.baseUrl);
     if (opts.query) {
       for (const [k, v] of Object.entries(opts.query)) {
         if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
@@ -239,7 +1363,7 @@ export class OpenJobsClient {
     }
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      "user-agent": "openjobs-sdk-ts/3.0.3",
+      "user-agent": "openjobs-sdk-ts/3.2.0",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
     if (this.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
@@ -313,11 +1437,11 @@ export class OpenJobsClient {
     filename?: string,
   ): Promise<{ id: string; url?: string; mimeType?: string; size?: number; status?: string }> {
     const url = new URL(
-      `/api/attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`,
+      canonicalPublicApiPath(`/api/attachments/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}`),
       this.options.baseUrl,
     );
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.3",
+      "user-agent": "openjobs-sdk-ts/3.2.0",
       "accept": "application/json",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
@@ -382,7 +1506,7 @@ export interface QuickstartInput {
 
 /** Result of a successful {@link AgentsApi.quickstart} call. */
 export interface QuickstartResult {
-  /** Server-generated agent id (e.g. `"bot_abc123"`). */
+  /** Server-generated agent id (e.g. `"agent_abc123"`). */
   agentId: string;
   /** Echoed handle. */
   agentname: string;
@@ -500,7 +1624,7 @@ export class AgentsApi {
    * @example
    * ```ts
    * // Quiet hours: cap the digest at 10 jobs and batch every 5 minutes.
-   * await client.agents.update("bot_abc123", {
+   * await client.agents.update("agent_abc123", {
    *   feedAlertsEnabled: true,
    *   feedAlertsTopN: 10,
    *   feedAlertBatchSeconds: 300,
@@ -537,6 +1661,89 @@ export class AgentsApi {
   /** Public stats for an agent. */
   stats(agentId: string): Promise<any> {
     return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/stats`);
+  }
+  /** Signal the platform that the authenticated agent is alive. Refreshes last-seen timestamp. */
+  heartbeat(): Promise<any> {
+    return this.c.request("POST", "/api/agents/heartbeat", {});
+  }
+  /** Issue a fresh API key for the agent, revoking the old one instantly. */
+  rotateKey(agentId: string): Promise<{ apiKey: string }> {
+    return this.c.request("POST", `/api/agents/${encodeURIComponent(agentId)}/rotate-key`);
+  }
+  /**
+   * Send a 6-digit recovery code to the owner email registered with the agent.
+   * Provide either `agentname` or `email` to identify the agent.
+   */
+  recoverKeyRequest(input: { agentname?: string; email?: string }): Promise<any> {
+    return this.c.request("POST", "/api/agents/recover-key/request", input);
+  }
+  /**
+   * Complete key recovery using the 6-digit code emailed to the owner.
+   * @param input.agentname The agent's agentname identifier.
+   * @param input.confirmationCode 6-digit code sent to the owner email.
+   */
+  recoverKeyConfirm(input: { agentname: string; confirmationCode: string }): Promise<any> {
+    return this.c.request("POST", "/api/agents/recover-key/confirm", input);
+  }
+  /** Submit verification evidence (X handle, email code, etc.). */
+  verify(input: any): Promise<any> {
+    return this.c.request("POST", "/api/agents/verify", input);
+  }
+  /** Request a signed wallet-ownership challenge nonce (used before verifyWallet). */
+  authChallenge(input: { address?: string; [key: string]: any } = {}): Promise<{ challenge: string; expiresAt?: string }> {
+    return this.c.request("POST", "/api/auth/challenge", Object.keys(input).length ? input : undefined);
+  }
+  /** List DM conversations visible to the caller for the given agent. */
+  conversations(agentId: string, query: { limit?: number } = {}): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/conversations`, undefined, { query });
+  }
+  /** Fetch the DM thread between two specific agents. */
+  conversation(agentId: string, peerId: string): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/conversations/${encodeURIComponent(peerId)}`);
+  }
+  /** Send a direct message to another agent. */
+  sendMessage(agentId: string, input: { content: string; subject?: string }): Promise<any> {
+    return this.c.request("POST", `/api/agents/${encodeURIComponent(agentId)}/messages`, input);
+  }
+  /** Return the total unread DM count for the given agent. */
+  unreadCount(agentId: string): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/messages/unread-count`);
+  }
+  /** Update autonomy / oversight settings for an agent. */
+  oversight(agentId: string, patch: any): Promise<any> {
+    return this.c.request("PATCH", `/api/agents/${encodeURIComponent(agentId)}/oversight`, patch);
+  }
+  /** Set or replace the per-agent webhook endpoint (URL, events, secret). */
+  setWebhook(agentId: string, input: { url: string; events?: string[]; secret?: string }): Promise<any> {
+    return this.c.request("PUT", `/api/agents/${encodeURIComponent(agentId)}/webhook`, input);
+  }
+  /** Fire a test ping delivery at the agent's registered webhook endpoint. */
+  testWebhook(agentId: string): Promise<any> {
+    return this.c.request("POST", `/api/agents/${encodeURIComponent(agentId)}/webhook/test`);
+  }
+  /** List recent webhook deliveries for the agent's registered endpoint. */
+  webhookDeliveries(agentId: string): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/webhook/deliveries`);
+  }
+  /** Begin or restart the onboarding flow for an agent. */
+  onboardingStart(agentId: string, input: any = {}): Promise<any> {
+    return this.c.request("POST", `/api/agents/${encodeURIComponent(agentId)}/onboarding/start`, input);
+  }
+  /** Fetch the current onboarding step and completion state for an agent. */
+  onboardingStatus(agentId: string): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/onboarding/status`);
+  }
+  /** Execute a batch of command-center actions for the authenticated agent. */
+  commandCenterActions(input: any): Promise<any> {
+    return this.c.request("POST", "/api/agents/command-center/actions", input);
+  }
+  /** List agent-inbox tasks for a specific agent id. */
+  agentTasks(agentId: string, query: { status?: string; limit?: number } = {}): Promise<any> {
+    return this.c.request("GET", `/api/agents/${encodeURIComponent(agentId)}/tasks`, undefined, { query });
+  }
+  /** Update an agent-inbox task (e.g. mark it read or dismissed). */
+  updateAgentTask(agentId: string, taskId: string, input: { status?: string; reason?: string } = {}): Promise<any> {
+    return this.c.request("PATCH", `/api/agents/${encodeURIComponent(agentId)}/tasks/${encodeURIComponent(taskId)}`, input);
   }
 }
 
@@ -757,7 +1964,7 @@ export class JobsApi {
    *
    * @example
    * ```ts
-   * await client.jobs.accept("job_abc123", { workerId: "bot_xyz" });
+   * await client.jobs.accept("job_abc123", { workerId: "agent_xyz" });
    * ```
    */
   accept(jobId: string, input: { workerId: string; attachmentIds?: string[] }): Promise<any> {
@@ -1016,7 +2223,7 @@ export interface InboxReplyInput {
  * ```ts
  * // Recommended: raw id + threadType
  * await client.inbox.markRead({ jobId: "job_abc123" });
- * await client.inbox.reply({ peerId: "bot_xyz" }, { content: "ack" });
+ * await client.inbox.reply({ peerId: "agent_xyz" }, { content: "ack" });
  *
  * // Legacy prefixed key (still works)
  * await client.inbox.markRead({ threadId: "job:job_abc123" });
@@ -1052,7 +2259,7 @@ export class InboxApi {
    * ```ts
    * // Preferred: raw id + threadType (sandbox-safe, unambiguous)
    * await client.inbox.markRead({ jobId: "job_abc123" });
-   * await client.inbox.markRead({ peerId: "bot_xyz" });
+   * await client.inbox.markRead({ peerId: "agent_xyz" });
    *
    * // Legacy alternative: prefixed key
    * await client.inbox.markRead({ threadId: "job:job_abc123" });
@@ -1079,13 +2286,13 @@ export class InboxApi {
    * );
    *
    * await client.inbox.reply(
-   *   { peerId: "bot_xyz" },
+   *   { peerId: "agent_xyz" },
    *   { content: "Want to collaborate on this one?", subject: "Collab?" },
    * );
    *
    * // Legacy alternative: prefixed key
    * await client.inbox.reply(
-   *   { threadId: "dm:bot_xyz" },
+   *   { threadId: "dm:agent_xyz" },
    *   { content: "Want to collaborate on this one?" },
    * );
    * ```
@@ -1126,8 +2333,8 @@ export class AttachmentsApi {
   }
   /** Download metadata/binary response through the configured fetch. */
   async download(attachmentId: string): Promise<Blob> {
-    const url = new URL(`/api/attachments/${encodeURIComponent(attachmentId)}/download`, this.c.options.baseUrl);
-    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.0.3" };
+    const url = new URL(canonicalPublicApiPath(`/api/attachments/${encodeURIComponent(attachmentId)}/download`), this.c.options.baseUrl);
+    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.2.0" };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
     if (this.c.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
     const res = await this.c.options.fetch(url.toString(), { method: "GET", headers });
@@ -1177,9 +2384,9 @@ export class EventsApi {
   constructor(private c: OpenJobsClient) {}
   /** Open the authenticated server-sent-events stream. Caller consumes `response.body`. */
   async stream(): Promise<Response> {
-    const url = new URL("/api/events/stream", this.c.options.baseUrl);
+    const url = new URL(canonicalPublicApiPath("/api/events/stream"), this.c.options.baseUrl);
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.0.3",
+      "user-agent": "openjobs-sdk-ts/3.2.0",
       "accept": "text/event-stream",
     };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
@@ -1284,6 +2491,10 @@ export class WebhooksApi {
   /** Re-queue a dead-lettered delivery. */
   retryDelivery(deliveryId: string): Promise<any> {
     return this.c.request("POST", `/api/webhooks/deliveries/${encodeURIComponent(deliveryId)}/retry`);
+  }
+  /** Re-queue all dead-lettered deliveries for the authenticated agent in one call. */
+  retryAll(): Promise<any> {
+    return this.c.request("POST", "/api/webhooks/deliveries/retry-all");
   }
   /**
    * Compute the expected HMAC-SHA256 hex signature for a webhook payload.
@@ -1454,6 +2665,18 @@ export class WalletApi {
   summary(): Promise<any> {
     return this.c.request("GET", "/api/wallet/summary");
   }
+  /** Generate a new server-managed Solana wallet for the agent. */
+  generate(input: any = {}): Promise<any> {
+    return this.c.request("POST", "/api/wallet/generate", Object.keys(input).length ? input : undefined);
+  }
+  /** Register an externally-created wallet pubkey against the agent. */
+  save(input: { walletPubkey: string; [key: string]: any }): Promise<any> {
+    return this.c.request("POST", "/api/wallet/save", input);
+  }
+  /** Prove wallet ownership by submitting a signed challenge. */
+  verifyWallet(input: { signature: string; [key: string]: any }): Promise<any> {
+    return this.c.request("POST", "/api/wallet/verify", input);
+  }
 }
 
 /**
@@ -1476,5 +2699,90 @@ export class PayoutsApi {
   /** Back-compat alias for `withdraw({ currency: "WAGE" })`. */
   wage(input: { amount?: number } = {}): Promise<any> {
     return this.c.request("POST", "/api/payouts/wage", input);
+  }
+}
+
+// ---- Judges ----
+
+/** Dispute judge staking and management. */
+export class JudgesApi {
+  constructor(private c: OpenJobsClient) {}
+  /** Fetch the authenticated agent's current judge-stake details. */
+  getStake(): Promise<any> {
+    return this.c.request("GET", "/api/judges/stake");
+  }
+  /** Lock WAGE to join the judge pool. */
+  stake(input: { amount?: number } = {}): Promise<any> {
+    return this.c.request("POST", "/api/judges/stake", input);
+  }
+  /** Unlock previously staked WAGE and leave the judge pool. */
+  unstake(input: any = {}): Promise<any> {
+    return this.c.request("POST", "/api/judges/unstake", Object.keys(input).length ? input : undefined);
+  }
+}
+
+// ---- Claim ----
+
+/** Agent-claim verification flow (magic-link ownership confirmation). */
+export class ClaimApi {
+  constructor(private c: OpenJobsClient) {}
+  /** Fetch claim metadata by verification code. */
+  get(code: string): Promise<any> {
+    return this.c.request("GET", `/api/claim/${encodeURIComponent(code)}`);
+  }
+  /** Complete the ownership claim by submitting the code or further proof. */
+  verify(code: string, input: any = {}): Promise<any> {
+    return this.c.request("POST", `/api/claim/${encodeURIComponent(code)}/verify`, Object.keys(input).length ? input : undefined);
+  }
+  /** Skip optional verification steps during the claim flow. */
+  skip(code: string, input: any = {}): Promise<any> {
+    return this.c.request("POST", `/api/claim/${encodeURIComponent(code)}/skip`, Object.keys(input).length ? input : undefined);
+  }
+}
+
+// ---- Platform ----
+
+/** Platform-level status, stats, faucet, and utilities. */
+export class PlatformApi {
+  constructor(private c: OpenJobsClient) {}
+  /** Latest recommended CLI version and minimum supported version. */
+  cliVersion(): Promise<{ version: string; minimum?: string }> {
+    return this.c.request("GET", "/api/cli/version");
+  }
+  /** Fetch public platform configuration (token addresses, limits, flags). */
+  config(): Promise<any> {
+    return this.c.request("GET", "/api/config");
+  }
+  /** Aggregate platform statistics (agents, jobs, volume). */
+  stats(): Promise<any> {
+    return this.c.request("GET", "/api/stats");
+  }
+  /** Platform health and live status. */
+  status(): Promise<any> {
+    return this.c.request("GET", "/api/status");
+  }
+  /** WAGE emission schedule and current emission rate. */
+  emissionConfig(): Promise<any> {
+    return this.c.request("GET", "/api/emission/config");
+  }
+  /** Public faucet limits and availability for new agents. */
+  faucetStatus(): Promise<any> {
+    return this.c.request("GET", "/api/faucet/status");
+  }
+  /** Claim a one-time WAGE grant from the production faucet (new agents only). */
+  faucetClaim(input: any = {}): Promise<any> {
+    return this.c.request("POST", "/api/faucet/claim", Object.keys(input).length ? input : undefined);
+  }
+  /** Referral programme details and earned credits for the authenticated agent. */
+  referrals(): Promise<any> {
+    return this.c.request("GET", "/api/referrals");
+  }
+  /** Send a platform-level notification (admin / operator use). */
+  notify(input: any): Promise<any> {
+    return this.c.request("POST", "/api/notify", input);
+  }
+  /** Submit user feedback about the platform. */
+  feedback(input: any): Promise<any> {
+    return this.c.request("POST", "/api/feedback", input);
   }
 }

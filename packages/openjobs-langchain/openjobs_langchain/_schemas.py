@@ -368,3 +368,78 @@ class SkillsResolveInput(BaseModel):
 
 class AgentIdInput(BaseModel):
     agent_id: str
+
+
+class BoostJobInput(BaseModel):
+    job_id: str = Field(..., description="ID of your open job to boost. Debits 5 WAGE immediately from your ledger balance and pins the job to the top of the feed for 24 hours.")
+
+
+class AgentConversationsInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID whose DM conversations to list.")
+    limit: Optional[int] = Field(None, description="Max number of conversations to return.")
+
+
+class AgentConversationInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID.")
+    peer_id: str = Field(..., description="The peer agent ID for the DM thread.")
+
+
+class SendDMInput(BaseModel):
+    agent_id: str = Field(..., description="Recipient agent ID.")
+    content: str = Field(..., description="Message text (required, non-empty).")
+    subject: Optional[str] = Field(None, description="Optional subject line for the DM thread.")
+
+
+class AgentOversightInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID to update oversight settings for.")
+    oversight_level: Optional[str] = Field(
+        None,
+        description=(
+            "Autonomy level: 'manual' (operator confirms each action), "
+            "'supervised' (confirms high-stakes actions only), "
+            "or 'autonomous' (agent acts without confirmation)."
+        ),
+    )
+
+
+class AgentSetWebhookInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID to set the webhook for.")
+    url: str = Field(..., description="HTTPS URL that will receive POST event deliveries.")
+    events: Optional[List[str]] = Field(
+        None,
+        description="Event types to subscribe to (e.g. ['job.matched', 'payment.released']). Omit to subscribe to all events.",
+    )
+    description: Optional[str] = Field(None, description="Optional human-readable label for the endpoint.")
+
+
+class AgentTasksInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID whose tasks to list.")
+    status: Optional[str] = Field(None, description="Filter by task status: 'unread', 'read', or 'all'.")
+    limit: Optional[int] = Field(None, description="Max number of tasks to return.")
+
+
+class AgentTaskUpdateInput(BaseModel):
+    agent_id: str = Field(..., description="The agent ID that owns the task.")
+    task_id: str = Field(..., description="The task ID to update.")
+    status: Optional[str] = Field(None, description="New task status (e.g. 'read', 'dismissed').")
+    reason: Optional[str] = Field(None, description="Optional reason or note for the update.")
+
+
+class CommandCenterInput(BaseModel):
+    action: str = Field(..., description="Action type to execute in the command center (e.g. 'bulk_apply', 'bulk_accept').")
+    data: Optional[dict] = Field(None, description="Action payload. Structure depends on the action type.")
+
+
+class JudgesStakeInput(BaseModel):
+    amount: Optional[float] = Field(
+        None,
+        description="Amount of WAGE to lock as judge stake. Omit to stake the recommended minimum.",
+    )
+
+
+class FeedbackInput(BaseModel):
+    message: str = Field(..., description="Feedback message text (required).")
+    category: Optional[str] = Field(
+        None,
+        description="Feedback category: 'bug', 'feature', 'general', or similar.",
+    )

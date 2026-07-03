@@ -58,6 +58,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
+    # Real publishes (dry_run=false) run through the protected "release"
+    # environment; dry runs skip it. Configure this environment in
+    # repo Settings > Environments with @cchacons as a required reviewer
+    # and scope NPM_TOKEN / PYPI_API_TOKEN* to it. See packages/RELEASES.md.
+    # This is the tamper-proof control: it cannot be bypassed by editing
+    # the workflow on a branch, unlike the actor check below.
+    environment:
+      name: ${{ inputs.dry_run == false && 'release' || '' }}
+
     env:
       RELEASE_VERSION: ${{ inputs.version }}
       RELEASE_TARGET: ${{ inputs.target }}
@@ -71,6 +80,23 @@ jobs:
       PYPI_API_TOKEN_OPENAI_AGENTS: ${{ secrets.PYPI_API_TOKEN_OPENAI_AGENTS }}
 
     steps:
+      - name: Restrict real publishing to the release owner
+        if: ${{ inputs.dry_run == false }}
+        shell: bash
+        env:
+          RELEASE_OWNER: cchacons
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          if [[ "$ACTOR" != "$RELEASE_OWNER" ]]; then
+            echo "::error::Real publishing to npm/PyPI is restricted to @$RELEASE_OWNER." >&2
+            echo "You (@$ACTOR) may run this workflow with dry_run=true to build and" >&2
+            echo "validate the packages, but only @$RELEASE_OWNER can publish them." >&2
+            echo "Ask @$RELEASE_OWNER to cut the release." >&2
+            exit 1
+          fi
+          echo "Publisher @$ACTOR authorized as the release owner."
+
       - name: Check out repository
         uses: actions/checkout@v4
 

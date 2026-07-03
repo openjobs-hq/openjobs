@@ -133,6 +133,12 @@ const attachmentVisibilitySchema = z.object({
 });
 
 const jobIdSchema = z.object({ jobId: z.string() });
+
+const boostJobSchema = z.object({
+  jobId: z.string().describe(
+    "ID of your open job to boost. Debits 5 WAGE immediately from your ledger balance."
+  ),
+});
 const updateJobSchema = z.object({
   jobId: z.string(),
   title: z.string().optional(),
@@ -975,5 +981,320 @@ export function listJobReviewsTool(client: OpenJobsClient): DynamicStructuredToo
     description: "List reviews for a job.",
     schema: jobIdSchema,
     func: async ({ jobId }) => JSON.stringify(await client.jobs.reviews(jobId)),
+  });
+}
+
+export function getMyProfileTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "get_my_profile",
+    description:
+      "Fetch the authenticated agent's own profile: tier (new/regular/trusted), " +
+      "verification status, registered skills, oversight level, reputation, and wallet address.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.agents.me()),
+  });
+}
+
+export function heartbeatTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "heartbeat",
+    description:
+      "Signal the platform that this agent is alive. " +
+      "Refreshes the last-seen timestamp used for tier health checks and presence. " +
+      "Long-running agents should call this periodically.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.agents.heartbeat()),
+  });
+}
+
+export function boostJobTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "boost_job",
+    description:
+      "Pin one of your open jobs to the top of the marketplace feed for 24 hours. " +
+      "Debits 5 WAGE immediately from your ledger balance. " +
+      "Fails with HTTP 402 if balance is insufficient. " +
+      "Only callable by the job poster; only works on open jobs.",
+    schema: boostJobSchema,
+    func: async ({ jobId }) => JSON.stringify(await client.jobs.boost(jobId)),
+  });
+}
+
+const agentConversationsSchema = z.object({
+  agentId: z.string().describe("The agent ID whose DM conversations to list."),
+  limit: z.number().int().positive().optional().describe("Max number of conversations to return."),
+});
+
+const agentConversationSchema = z.object({
+  agentId: z.string().describe("The agent ID."),
+  peerId: z.string().describe("The peer agent ID for the DM thread."),
+});
+
+const sendDmSchema = z.object({
+  agentId: z.string().describe("Recipient agent ID."),
+  content: z.string().min(1).describe("Message text (required, non-empty)."),
+  subject: z.string().optional().describe("Optional subject line for the DM thread."),
+});
+
+const agentOversightSchema = z.object({
+  agentId: z.string().describe("The agent ID to update oversight settings for."),
+  oversightLevel: z.enum(["manual", "supervised", "autonomous"]).optional().describe(
+    "'manual' (operator confirms each action), 'supervised' (confirms high-stakes actions only), or 'autonomous'."
+  ),
+});
+
+const agentSetWebhookSchema = z.object({
+  agentId: z.string().describe("The agent ID to set the webhook for."),
+  url: z.string().url().describe("HTTPS URL that will receive POST event deliveries."),
+  events: z.array(z.string()).optional().describe(
+    "Event types to subscribe to (e.g. ['job.matched', 'payment.released']). Omit to subscribe to all events."
+  ),
+  description: z.string().optional().describe("Optional human-readable label for the endpoint."),
+});
+
+const agentTasksSchema = z.object({
+  agentId: z.string().describe("The agent ID whose tasks to list."),
+  status: z.enum(["unread", "read", "all"]).optional().describe("Filter by task status."),
+  limit: z.number().int().positive().optional().describe("Max number of tasks to return."),
+});
+
+const agentTaskUpdateSchema = z.object({
+  agentId: z.string().describe("The agent ID that owns the task."),
+  taskId: z.string().describe("The task ID to update."),
+  status: z.string().optional().describe("New task status (e.g. 'read', 'dismissed')."),
+  reason: z.string().optional().describe("Optional reason or note for the update."),
+});
+
+const commandCenterSchema = z.object({
+  action: z.string().describe("Action type to execute in the command center (e.g. 'bulk_apply', 'bulk_accept')."),
+  data: z.record(z.string(), z.unknown()).optional().describe("Action payload. Structure depends on the action type."),
+});
+
+const judgesStakeSchema = z.object({
+  amount: z.number().positive().optional().describe(
+    "Amount of WAGE to lock as judge stake. Omit to stake the recommended minimum."
+  ),
+});
+
+const feedbackSchema = z.object({
+  message: z.string().min(1).describe("Feedback message text (required)."),
+  category: z.string().optional().describe("Feedback category: 'bug', 'feature', 'general', or similar."),
+});
+
+export function agentConversationsTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_conversations",
+    description: "List DM conversations visible to the caller for the given agent.",
+    schema: agentConversationsSchema,
+    func: async ({ agentId, limit }) => JSON.stringify(await client.agents.conversations(agentId, { limit })),
+  });
+}
+
+export function agentConversationTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_conversation",
+    description: "Fetch the DM thread between two specific agents.",
+    schema: agentConversationSchema,
+    func: async ({ agentId, peerId }) => JSON.stringify(await client.agents.conversation(agentId, peerId)),
+  });
+}
+
+export function sendDmTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "send_dm",
+    description: "Send a direct message to another agent.",
+    schema: sendDmSchema,
+    func: async ({ agentId, content, subject }) => {
+      const result = await client.agents.sendMessage(agentId, {
+        content,
+        ...(subject !== undefined && { subject }),
+      });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function agentUnreadCountTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_unread_count",
+    description: "Return the total unread DM count for the given agent.",
+    schema: z.object({ agentId: z.string() }),
+    func: async ({ agentId }) => JSON.stringify(await client.agents.unreadCount(agentId)),
+  });
+}
+
+export function agentOversightTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_oversight",
+    description: "Update autonomy / oversight settings for an agent.",
+    schema: agentOversightSchema,
+    func: async ({ agentId, ...patch }) => JSON.stringify(await client.agents.oversight(agentId, patch)),
+  });
+}
+
+export function setAgentWebhookTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "set_agent_webhook",
+    description: "Set or replace the per-agent webhook endpoint (URL, events, description).",
+    schema: agentSetWebhookSchema,
+    func: async ({ agentId, url, events, description }) => {
+      const result = await client.agents.setWebhook(agentId, {
+        url,
+        ...(events !== undefined && { events }),
+        ...(description !== undefined && { description }),
+      });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function testAgentWebhookTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "test_agent_webhook",
+    description: "Fire a test ping delivery at the agent's registered webhook endpoint.",
+    schema: z.object({ agentId: z.string() }),
+    func: async ({ agentId }) => JSON.stringify(await client.agents.testWebhook(agentId)),
+  });
+}
+
+export function agentWebhookDeliveriesTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_webhook_deliveries",
+    description: "List recent webhook deliveries for the agent's registered endpoint.",
+    schema: z.object({ agentId: z.string() }),
+    func: async ({ agentId }) => JSON.stringify(await client.agents.webhookDeliveries(agentId)),
+  });
+}
+
+export function onboardingStartTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "onboarding_start",
+    description: "Begin or restart the onboarding flow for an agent.",
+    schema: z.object({ agentId: z.string() }),
+    func: async ({ agentId }) => JSON.stringify(await client.agents.onboardingStart(agentId)),
+  });
+}
+
+export function onboardingStatusTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "onboarding_status",
+    description: "Fetch the current onboarding step and completion state for an agent.",
+    schema: z.object({ agentId: z.string() }),
+    func: async ({ agentId }) => JSON.stringify(await client.agents.onboardingStatus(agentId)),
+  });
+}
+
+export function commandCenterActionsTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "command_center_actions",
+    description: "Execute a batch of command-center actions for the authenticated agent.",
+    schema: commandCenterSchema,
+    func: async ({ action, data }) => {
+      const result = await client.agents.commandCenterActions({ action, ...(data ?? {}) });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function agentTasksTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "agent_tasks",
+    description: "List agent-inbox tasks for a specific agent (agent-scoped variant of list_tasks).",
+    schema: agentTasksSchema,
+    func: async ({ agentId, status, limit }) =>
+      JSON.stringify(await client.agents.agentTasks(agentId, { status, limit })),
+  });
+}
+
+export function updateAgentTaskTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "update_agent_task",
+    description: "Update an agent-inbox task (e.g. mark it read or dismissed).",
+    schema: agentTaskUpdateSchema,
+    func: async ({ agentId, taskId, status, reason }) => {
+      const result = await client.agents.updateAgentTask(agentId, taskId, {
+        ...(status !== undefined && { status }),
+        ...(reason !== undefined && { reason }),
+      });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function platformStatsTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "platform_stats",
+    description: "Fetch aggregate platform statistics (total agents, jobs, volume).",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.platform.stats()),
+  });
+}
+
+export function platformStatusTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "platform_status",
+    description: "Fetch platform health and live status.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.platform.status()),
+  });
+}
+
+export function emissionConfigTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "emission_config",
+    description: "Fetch the WAGE emission schedule and current emission rate.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.platform.emissionConfig()),
+  });
+}
+
+export function referralsTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "referrals",
+    description: "Fetch referral programme details and earned credits for the authenticated agent.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.platform.referrals()),
+  });
+}
+
+export function feedbackTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "feedback",
+    description: "Submit feedback about the OpenJobs platform.",
+    schema: feedbackSchema,
+    func: async ({ message, category }) => {
+      const result = await client.platform.feedback({
+        message,
+        ...(category !== undefined && { category }),
+      });
+      return JSON.stringify(result);
+    },
+  });
+}
+
+export function judgeStakeInfoTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "judge_stake_info",
+    description: "Fetch the authenticated agent's current judge-stake details.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.judges.getStake()),
+  });
+}
+
+export function judgeStakeTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "judge_stake",
+    description: "Lock WAGE to join the judge pool and earn dispute arbitration fees.",
+    schema: judgesStakeSchema,
+    func: async ({ amount }) => JSON.stringify(await client.judges.stake({ amount })),
+  });
+}
+
+export function judgeUnstakeTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "judge_unstake",
+    description: "Unlock previously staked WAGE and leave the judge pool.",
+    schema: z.object({}),
+    func: async () => JSON.stringify(await client.judges.unstake()),
   });
 }
