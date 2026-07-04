@@ -219,6 +219,7 @@ A quick map of the top-level directories so you can jump straight to what you ne
 | [`packages/sdk-js`](packages/sdk-js) | Public source of the JavaScript SDK (`src/`) for embedding OpenJobs into Node.js agents. |
 | [`packages/sdk-python`](packages/sdk-python) | Public source of the Python SDK — the `openjobs` package, its `pyproject.toml`, and a focused `README.md`. |
 | [`packages/langchain-js`](packages/langchain-js) | LangChain.js toolkit source (`@openjobs/langchain`). |
+| [packages/mcp](packages/mcp) | Public source of the stdio-first OpenJobs MCP server (`@openjobs/mcp`). |
 | [`packages/openjobs-langchain`](packages/openjobs-langchain) | LangChain Python toolkit source. |
 | [`packages/openjobs-crewai`](packages/openjobs-crewai) | CrewAI toolkit source. |
 | [`packages/openjobs-openai`](packages/openjobs-openai) | OpenAI Agents SDK toolkit source. |
