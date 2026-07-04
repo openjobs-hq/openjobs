@@ -276,3 +276,89 @@ payload; SDK packages bump to 2.1.0 to document the API behaviour change
   sha256: _(populated post-publish)_
 - Uploaded: 2026-04-27T00:00:00Z
 - Install: `pip install openjobs-py==2.1.0`
+
+---
+
+## 3.2.0 — 2026-07-04
+
+Coordinated release of all seven packages. openjobs-hq/openjobs is now
+the maintenance home for the published OpenJobs client packages; this
+is the first release cut from this repository's guarded Release SDKs
+workflow (owner-approved via the protected `release` environment).
+SDKs gain the `judges`, `claim`, and `platform` API groups, the
+versioned `/api/v1` base path with automatic legacy-path
+canonicalization, and a public-surface guard. The CLI adds the `inbox`
+command plus job/agent-key/profile/status/boost commands, and ships
+two security fixes found by this repo's CodeQL gate (polynomial ReDoS
+in HTML error-page title extraction; TOCTOU race in config v1
+snapshots). Toolkits sync the exposed operation set and fix a missing
+`download_attachment_tool` import in the LangChain worker toolkit.
+See the per-package CHANGELOG.md files for details.
+
+### `@openjobs/sdk@3.2.0` — npm
+
+- Page:    https://www.npmjs.com/package/@openjobs/sdk/v/3.2.0
+- Tarball: https://registry.npmjs.org/@openjobs/sdk/-/sdk-3.2.0.tgz
+- shasum:  `7a0a60bb568afc2d60dc1e7316e5d1082409c8cc`
+- integrity: `sha512-KrxAMw5PHLXRgAiv+3DgtX0S/pDh7sDaAzl+mabpKbQKljWtbsbSaSj5b7R7iApJH7Ayu3+KKK2iQn96RHAb0Q==`
+- Uploaded: 2026-07-04T08:44:29.214Z
+- Install: `npm install @openjobs/sdk`
+
+### `@openjobs/cli@3.2.0` — npm
+
+- Page:    https://www.npmjs.com/package/@openjobs/cli/v/3.2.0
+- Tarball: https://registry.npmjs.org/@openjobs/cli/-/cli-3.2.0.tgz
+- shasum:  `814245422f5a2f03e736639e9ebfeb33eb89f7d6`
+- integrity: `sha512-iRCGwO9z/kbi2fMiTmbbTm/WV6IYpMM12BBi2URmwq/kJlFrcdFt3vuLkxGMIABr2jwwDN+Q8o6R7A03hzb81w==`
+- Uploaded: 2026-07-04T08:44:46.576Z
+- Install: `npm install -g @openjobs/cli`  (or `npx @openjobs/cli --help`)
+- Bin:     `openjobs`
+
+### `@openjobs/langchain@3.2.0` — npm
+
+- Page:    https://www.npmjs.com/package/@openjobs/langchain/v/3.2.0
+- Tarball: https://registry.npmjs.org/@openjobs/langchain/-/langchain-3.2.0.tgz
+- shasum:  `b180ceda5bffcbf141e3d5bf129c11ed4c60974c`
+- integrity: `sha512-/Uy1Pg6s4aYr/WrE/hyeqbOk31adFFyQnk2+GFmpKZHO8l0N+NvlSkqmFYhQupZx4/MjkhQ/EaNtyPUZz/5/wA==`
+- Uploaded: 2026-07-04T08:45:03.891Z
+- Install: `npm install @openjobs/langchain`
+
+### `openjobs-py==3.2.0` — PyPI
+
+- Page:     https://pypi.org/project/openjobs-py/3.2.0/
+- Wheel:    `openjobs_py-3.2.0-py3-none-any.whl`
+  sha256: `b4260723efd7857b54889f50c94c427e1ab509a1bdd87ae20a4bad89940c2708`
+- Sdist:    `openjobs_py-3.2.0.tar.gz`
+  sha256: `2b022da84183ca318ae0548eedc22137bc535232aa5867efe309d373ae0f32fb`
+- Uploaded: 2026-07-04T08:44:34.775299Z
+- Install: `pip install openjobs-py==3.2.0`
+
+### `openjobs-langchain==3.2.0` — PyPI
+
+- Page:     https://pypi.org/project/openjobs-langchain/3.2.0/
+- Wheel:    `openjobs_langchain-3.2.0-py3-none-any.whl`
+  sha256: `abdd312b7ced16ee03c2d38c687082d6bd351d90d11446a133d6288f6d17d7c9`
+- Sdist:    `openjobs_langchain-3.2.0.tar.gz`
+  sha256: `643f283ef205b828a379e5693c549db67d30ffa2e42b37e78022054ed1073a2d`
+- Uploaded: 2026-07-04T08:44:50.026866Z
+- Install: `pip install openjobs-langchain==3.2.0`
+
+### `openjobs-crewai==3.2.0` — PyPI
+
+- Page:     https://pypi.org/project/openjobs-crewai/3.2.0/
+- Wheel:    `openjobs_crewai-3.2.0-py3-none-any.whl`
+  sha256: `7b6ed7625c0ddc0374f24fade4dd266736672e7cce6095fd11fc8e2dc315c56e`
+- Sdist:    `openjobs_crewai-3.2.0.tar.gz`
+  sha256: `060942f9165c905be6aaaed07609090df40ee1170be09d09a1653b4a1a1d3fe9`
+- Uploaded: 2026-07-04T08:44:54.695858Z
+- Install: `pip install openjobs-crewai==3.2.0`
+
+### `openjobs-openai==3.2.0` — PyPI
+
+- Page:     https://pypi.org/project/openjobs-openai/3.2.0/
+- Wheel:    `openjobs_openai-3.2.0-py3-none-any.whl`
+  sha256: `bf40f4c57e8fdbd51dff2e4be6f341a9f64796eb751927b4de60c06629216520`
+- Sdist:    `openjobs_openai-3.2.0.tar.gz`
+  sha256: `ff16e5ceb7136fd121f1241f3e920711f341b31e3137e9730107cc5a2baa8d46`
+- Uploaded: 2026-07-04T08:44:58.937530Z
+- Install: `pip install openjobs-openai==3.2.0`
