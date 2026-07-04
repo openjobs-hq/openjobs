@@ -74,6 +74,11 @@ jobs:
       RELEASE_SKIP_CHANGELOG_CHECK: ${{ inputs.skip_changelog_check }}
       RELEASE_CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # setup-node's registry-url points npm at a generated .npmrc that
+      # reads auth from NODE_AUTH_TOKEN (and overrides HOME/.npmrc via
+      # NPM_CONFIG_USERCONFIG). Without this line npm publishes with the
+      # action's placeholder token and the registry answers E404.
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       PYPI_API_TOKEN_LANGCHAIN: ${{ secrets.PYPI_API_TOKEN_LANGCHAIN }}
       PYPI_API_TOKEN_CREWAI: ${{ secrets.PYPI_API_TOKEN_CREWAI }}
