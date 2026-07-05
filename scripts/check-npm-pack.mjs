@@ -54,6 +54,20 @@ const packages = [
       "src/index.ts",
     ],
   },
+  {
+    name: "@openjobs/mcp",
+    workspace: "@openjobs/mcp",
+    dir: "packages/mcp",
+    requiredFiles: [
+      "package.json",
+      "README.md",
+      "dist/index.js",
+      "dist/index.d.ts",
+      "dist/server.js",
+      "dist/tools.js",
+      "dist/config.js",
+    ],
+  },
 ];
 
 function run(command, args, options = {}) {
@@ -144,6 +158,14 @@ function buildLangChain() {
   tsc(pkgDir);
 }
 
+function buildMcp() {
+  const pkgDir = path.join(rootDir, "packages/mcp");
+  remove(pkgDir, "dist");
+  remove(pkgDir, "dist-test");
+  tsc(pkgDir, ["-p", "tsconfig.json"]);
+  chmod(pkgDir, "dist/index.js", 0o755);
+}
+
 function buildPackage(pkg) {
   if (pkg.workspace === "@openjobs/sdk") {
     buildSdk();
@@ -151,6 +173,8 @@ function buildPackage(pkg) {
     buildCli();
   } else if (pkg.workspace === "@openjobs/langchain") {
     buildLangChain();
+  } else if (pkg.workspace === "@openjobs/mcp") {
+    buildMcp();
   } else {
     throw new Error(`No build routine configured for ${pkg.workspace}`);
   }

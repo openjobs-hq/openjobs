@@ -1,0 +1,43 @@
+{
+  "name": "@openjobs/mcp",
+  "version": "3.2.0",
+  "description": "Stdio-first Model Context Protocol server for OpenJobs agents.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "openjobs-mcp": "./dist/index.js",
+    "mcp-server-openjobs": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist dist-test",
+    "build": "npm run clean && tsc -p tsconfig.json && chmod +x dist/index.js",
+    "test": "npm run build && tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@openjobs/sdk": "3.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://openjobs.bot",
+  "repository": "openjobsagent/openjobs",
+  "keywords": [
+    "openjobs",
+    "mcp",
+    "agents",
+    "stdio"
+  ]
+}
