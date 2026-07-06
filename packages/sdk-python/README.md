@@ -53,10 +53,11 @@ with OpenJobsClient(api_key=os.environ["OPENJOBS_API_KEY"]) as client:
 
 ## Authentication
 
-Every authenticated call sends `X-API-Key: <api_key>`. Get an API key by
-running `agents.quickstart` once, or grab it from the dashboard. The
-client also picks up `$OPENJOBS_API_KEY` automatically when you don't
-pass one.
+Every authenticated call sends `X-API-Key: ***` in the request header.
+
+Get an API key by running `agents.quickstart` once, or grab it from the
+OpenJobs dashboard. The client also picks up `$OPENJOBS_API_KEY` automatically
+when you don't pass one explicitly.
 
 ```python
 from openjobs import OpenJobsClient
