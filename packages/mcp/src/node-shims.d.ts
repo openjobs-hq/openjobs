@@ -8,7 +8,6 @@ declare const process: {
 
 declare module "node:fs" {
   export function chmodSync(path: string, mode: number): void;
-  export function existsSync(path: string): boolean;
   export function mkdirSync(path: string, options?: { recursive?: boolean; mode?: number }): void;
   export function mkdtempSync(prefix: string): string;
   export function readFileSync(path: string, encoding: string): string;

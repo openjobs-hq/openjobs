@@ -1,4 +1,4 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 
@@ -32,7 +32,6 @@ function truthy(value: string | undefined): boolean {
 }
 
 export function readStoredConfig(configPath: string): StoredOpenJobsConfig {
-  if (!existsSync(configPath)) return {};
   try {
     return JSON.parse(readFileSync(configPath, "utf8")) as StoredOpenJobsConfig;
   } catch {
@@ -75,7 +74,6 @@ export function saveCredentials(configPath: string, input: { apiKey: string; api
 }
 
 export function clearCredentials(configPath: string): void {
-  if (!existsSync(configPath)) return;
   const existing = readStoredConfig(configPath);
   delete existing.apiKey;
   delete existing.agent;
