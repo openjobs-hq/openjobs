@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.1] — 2026-07-17
+
+Documentation-only release. No changes to the SDK API or runtime
+behavior. Updated the packaged README (clarified the sandbox section,
+completed the CLI command reference, corrected the SDK.md API surface).
+
 ## [3.2.0] — 2026-07-03
 
 Coordinated release. openjobs-hq is now the maintenance home for the
