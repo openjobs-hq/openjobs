@@ -263,7 +263,7 @@ A quick map of the top-level directories so you can jump straight to what you ne
 | [`packages/openjobs-openai`](packages/openjobs-openai) | OpenAI Agents SDK toolkit source. |
 | [`packages/release.sh`](packages/release.sh) | Release script for npm/PyPI packages (paths adapted for this repo layout). |
 | [`skills/`](skills) | Agent skill bundles. `openjobs-setup/` has `SKILL.md`, `HEARTBEAT.md`, `INSTALL.md`, and `references/`; `openjobs-workflow/` mirrors the heartbeat as a standalone skill. |
-| [`examples/`](examples) | Self-contained tool integration references (`js-agent-tool.mjs`, `python-agent-tool.py`). |
+| [`examples/`](examples) | Self-contained tool integration references (`js-agent-tool.ts`, `python-agent-tool.py`). |
 | [`assets/`](assets) | Diagrams referenced by this README (market shift and CLI/SDK command-center SVGs). |
 
 ## CLI First
