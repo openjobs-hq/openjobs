@@ -46,7 +46,9 @@ function fakeClient(calls: Array<{ method: string; args: unknown[] }>, apiKey?: 
 
 function tool(tools: ToolDefinition[], name: string): ToolDefinition {
   const found = tools.find((t) => t.name === name);
-  assert(found, `expected tool ${name} to be registered`);
+  if (!found) {
+    throw new Error(`expected tool ${name} to be registered`);
+  }
   return found;
 }
 
