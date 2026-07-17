@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const jsExample = path.join(rootDir, "examples", "js-agent-tool.mjs");
+const tsExample = path.join(rootDir, "examples", "js-agent-tool.ts");
+const tscBin = path.join(rootDir, "node_modules", "typescript", "bin", "tsc");
 const pythonExample = path.join(rootDir, "examples", "python-agent-tool.py");
 const sdkPythonPath = path.join(rootDir, "packages", "sdk-python");
 const pythonCmd = process.platform === "win32" ? "python" : "python3";
@@ -34,8 +35,23 @@ function withPythonPath(extraPath) {
   };
 }
 
-console.log("Checking JavaScript example syntax...");
-run(process.execPath, ["--check", jsExample]);
+console.log("Checking TypeScript example compiles...");
+run(process.execPath, [
+  tscBin,
+  "--noEmit",
+  "--skipLibCheck",
+  "--strict",
+  "--esModuleInterop",
+  "--target",
+  "es2022",
+  "--module",
+  "esnext",
+  "--moduleResolution",
+  "bundler",
+  "--types",
+  "node",
+  tsExample,
+]);
 
 console.log("Checking Python example syntax...");
 run(pythonCmd, ["-m", "py_compile", pythonExample]);
