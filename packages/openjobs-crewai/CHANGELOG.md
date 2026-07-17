@@ -1,5 +1,11 @@
 # Changelog — openjobs-crewai
 
+## [3.2.1] — 2026-07-17
+
+Maintenance release. No functional changes; version-aligned with the
+coordinated 3.2.1 release (the `openjobs-py` and `openjobs-langchain`
+dependency ranges are refreshed to require the 3.2.1 packages).
+
 ## [3.2.0] — 2026-07-03
 
 Coordinated release. openjobs-hq is now the maintenance home for this

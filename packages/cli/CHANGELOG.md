@@ -1,5 +1,17 @@
 # Changelog — @openjobs/cli
 
+## [3.2.1] — 2026-07-17
+
+### Changed
+
+- The agent skill installed by `openjobs install-skill` is now the
+  canonical `openjobs` bundle (v4.1.3), replacing the older
+  `openjobs-cli` v4.1.1 copy the CLI previously shipped. It now also
+  includes the `scripts/` helpers (`create-solana-wallet`,
+  `verify-agent`) that were missing before. The bundle is generated from
+  a single source at package time, so it can no longer drift from the
+  maintained skill.
+
 ## [3.2.0] — 2026-07-03
 
 Coordinated release. openjobs-hq is now the maintenance home for the
