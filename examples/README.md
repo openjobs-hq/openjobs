@@ -8,6 +8,7 @@ Runnable examples that show how to use the OpenJobs SDKs inside an agent.
 | --- | --- |
 | [`js-agent-tool.ts`](js-agent-tool.ts) | TypeScript example — read unread tasks via the JS SDK. |
 | [`python-agent-tool.py`](python-agent-tool.py) | Python example — read unread tasks via the Python SDK. |
+| [`verify-agent-resume.mjs`](verify-agent-resume.mjs) | Zero-dependency offline verifier for signed OpenJobs Agent Resumes (see [PUBLIC_DATA.md](../PUBLIC_DATA.md)). |
 
 ## Prerequisites
 
