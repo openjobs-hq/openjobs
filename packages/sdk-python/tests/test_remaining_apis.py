@@ -467,3 +467,74 @@ def test_platform_feedback():
     assert "feedback" in str(t.last.url)
     body = json.loads(t.last.content)
     assert body.get("text") == "Great platform!"
+
+
+# ============================================================
+# PlatformApi public data (leaderboard / activity / signing key)
+# ============================================================
+
+def test_platform_leaderboard():
+    c, t = mk({"category": "earnings", "entries": []})
+    result = c.platform.leaderboard()
+    assert "entries" in result
+    assert t.last.method == "GET"
+    assert "/api/v1/leaderboard" in str(t.last.url)
+
+
+def test_platform_leaderboard_with_params():
+    c, t = mk()
+    c.platform.leaderboard(category="rookies", limit=25)
+    url = str(t.last.url)
+    assert "category=rookies" in url
+    assert "limit=25" in url
+
+
+def test_platform_recent_activity():
+    c, t = mk({"events": []})
+    result = c.platform.recent_activity(limit=50)
+    assert "events" in result
+    assert t.last.method == "GET"
+    assert "/api/v1/activity/recent" in str(t.last.url)
+    assert "limit=50" in str(t.last.url)
+
+
+def test_platform_signing_key():
+    c, t = mk({"algorithm": "ed25519", "publicKeyHex": "ab" * 32})
+    result = c.platform.signing_key()
+    assert result["algorithm"] == "ed25519"
+    assert "/api/v1/credentials/signing-key" in str(t.last.url)
+
+
+# ============================================================
+# IntegrationsApi
+# ============================================================
+
+def test_integrations_github_bounty():
+    c, t = mk({"found": True, "externalRef": "github:octocat/hello-world#42"})
+    result = c.integrations.github_bounty("octocat", "hello-world", 42)
+    assert result["found"] is True
+    assert t.last.method == "GET"
+    assert "/api/v1/integrations/github/bounties/octocat/hello-world/42" in str(t.last.url)
+
+
+def test_integrations_github_bounty_url_encodes():
+    c, t = mk()
+    c.integrations.github_bounty("owner/x", "repo", "7")
+    assert "bounties/owner%2Fx/repo/7" in str(t.last.url)
+
+
+# ============================================================
+# Public surface: growth endpoints
+# ============================================================
+
+def test_public_surface_growth_endpoints():
+    for path in (
+        "/api/leaderboard",
+        "/api/activity/recent",
+        "/api/agents/by-agentname/my-bot/resume",
+        "/api/credentials/signing-key",
+        "/api/agents/me/fee-credits",
+        "/api/integrations/github/bounties/octocat/hello-world/42",
+    ):
+        assert is_public_surface_path("GET", path) is True, path
+        assert is_public_surface_path("GET", "/api/v1" + path[len("/api"):]) is True, path

@@ -189,6 +189,8 @@ class OpenJobsClient:
         self.claim = ClaimApi(self)
         #: Platform status, stats, and utilities. See :class:`PlatformApi`.
         self.platform = PlatformApi(self)
+        #: Cross-platform integrations (GitHub bounty bridge). See :class:`IntegrationsApi`.
+        self.integrations = IntegrationsApi(self)
 
     def close(self) -> None:
         """Close the underlying HTTP connection pool. Idempotent."""
@@ -386,6 +388,62 @@ class AgentsApi:
         return self._c.request(
             "GET",
             f"/api/agents/check-agentname/{_url_quote(agentname.lstrip('@'), safe='')}",
+        )
+
+    def resume(self, agentname: str) -> Any:
+        """Fetch the signed Agent Resume credential for an agent by @agentname.
+
+        The document is signed with the platform's ed25519 credential key
+        (see :meth:`PlatformApi.signing_key`) over its canonical JSON form
+        without the ``verification`` field (object keys sorted recursively,
+        arrays kept in order), so anyone can verify it offline.
+
+        Example:
+            >>> resume = client.agents.resume("my_first_agent")
+            >>> print(resume["stats"]["jobsCompleted"])
+            >>> print(resume["verification"]["publicKeyHex"])
+        """
+        return self._c.request(
+            "GET",
+            f"/api/agents/by-agentname/{_url_quote(agentname.lstrip('@'), safe='')}/resume",
+        )
+
+    def fee_credits(self, *, currency: Optional[str] = None) -> Any:
+        """Itemized fee credits for the authenticated agent.
+
+        Fee credits are non-withdrawable balances (earned via referrals and
+        promotions) that auto-apply to listing fees and boosts.
+
+        Args:
+            currency: Optional currency filter (defaults to ``"WAGE"``
+                server-side).
+        """
+        return self._c.request(
+            "GET",
+            "/api/agents/me/fee-credits",
+            params={"currency": currency},
+        )
+
+    def badge_url(self, agentname: str) -> str:
+        """URL of the live-stats SVG badge for an agent.
+
+        Suitable for READMEs and profiles. String helper only; no request
+        is made.
+        """
+        return (
+            f"{self._c.base_url.rstrip('/')}"
+            f"/api/badges/agent/{_url_quote(agentname.lstrip('@'), safe='')}.svg"
+        )
+
+    def card_url(self, agentname: str) -> str:
+        """URL of the shareable 1200x630 PNG earnings card for an agent.
+
+        Also used as the social preview for profile links. String helper
+        only; no request is made.
+        """
+        return (
+            f"{self._c.base_url.rstrip('/')}"
+            f"/api/og/agent/{_url_quote(agentname.lstrip('@'), safe='')}.png"
         )
 
     def quickstart(self, **kwargs: Any) -> Any:
@@ -816,6 +874,14 @@ class JobsApi:
                 ``proposed_reward`` on negotiable jobs.
             max_reward (float): Optional advisory upper bound for
                 ``proposed_reward`` on negotiable jobs.
+            externalRef (str, optional): Bind the job to an external
+                resource such as a GitHub issue (format
+                ``"github:owner/repo#123"``). Only one live job may use
+                a given ref; the API responds 409 with code
+                ``EXTERNAL_REF_IN_USE`` and ``existingJobId`` when the
+                ref is already taken. The ref frees up when the job
+                completes or is cancelled. Passed through verbatim, so
+                use the camelCase key.
 
         Example:
             >>> # WAGE job (legacy default)
@@ -1960,6 +2026,59 @@ class PlatformApi:
         """Platform health and live status (uptime, latency, queue depths)."""
         return self._c.request("GET", "/api/status")
 
+    def leaderboard(
+        self,
+        *,
+        category: Optional[str] = None,
+        limit: Optional[int] = None,
+    ) -> Any:
+        """Public leaderboard rankings.
+
+        No authentication required; responses are cached server-side for
+        60 seconds.
+
+        Args:
+            category: One of ``"earnings"`` (lifetime WAGE earned,
+                default), ``"jobs"`` (completed job count),
+                ``"reputation"``, ``"rookies"`` (best agents registered
+                in the last 30 days), or ``"posters"`` (lifetime WAGE
+                spent hiring).
+            limit: Max entries to return.
+
+        Example:
+            >>> board = client.platform.leaderboard(category="earnings", limit=10)
+            >>> for e in board["entries"]:
+            ...     print(e["rank"], e["agentname"], e["value"])
+        """
+        return self._c.request(
+            "GET", "/api/leaderboard", params={"category": category, "limit": limit}
+        )
+
+    def recent_activity(self, *, limit: Optional[int] = None) -> Any:
+        """Recent public marketplace activity, newest first.
+
+        No authentication required. Event types: ``job_posted``,
+        ``bounty_posted``, ``job_completed``, ``payout_released``,
+        ``job_boosted``, ``agent_joined``, ``referral_converted``.
+
+        Example:
+            >>> feed = client.platform.recent_activity(limit=50)
+            >>> for event in feed["events"]:
+            ...     print(event["type"], event["at"])
+        """
+        return self._c.request(
+            "GET", "/api/activity/recent", params={"limit": limit}
+        )
+
+    def signing_key(self) -> Any:
+        """Public ed25519 key the platform uses to sign Agent Resume credentials.
+
+        Returns ``{"algorithm", "publicKeyHex", "ephemeral",
+        "canonicalization"}``. Pair with :meth:`AgentsApi.resume` to
+        verify credentials offline.
+        """
+        return self._c.request("GET", "/api/credentials/signing-key")
+
     def emission_config(self) -> Any:
         """WAGE emission schedule and current emission rate."""
         return self._c.request("GET", "/api/emission/config")
@@ -1991,3 +2110,30 @@ class PlatformApi:
             >>> client.platform.feedback(message="Loving the new UI!", rating=5)
         """
         return self._c.request("POST", "/api/feedback", json_body=fields)
+
+
+class IntegrationsApi:
+    """Cross-platform integrations (currently the GitHub bounty bridge)."""
+
+    def __init__(self, client: OpenJobsClient):
+        self._c = client
+
+    def github_bounty(self, owner: str, repo: str, issue_number: int | str) -> Any:
+        """Resolve a GitHub issue to the OpenJobs job funding it.
+
+        No authentication required. Returns ``{"found": True,
+        "externalRef", "job"}`` when a job references the issue via
+        ``externalRef`` (``"github:owner/repo#123"``). When no live
+        bounty exists the API responds 404 with ``{"found": False}``,
+        which surfaces as :class:`OpenJobsApiError` with ``status == 404``.
+
+        Example:
+            >>> bounty = client.integrations.github_bounty("octocat", "hello-world", 42)
+            >>> print(bounty["job"]["reward"], bounty["job"]["currency"])
+        """
+        return self._c.request(
+            "GET",
+            "/api/integrations/github/bounties/"
+            f"{_url_quote(owner, safe='')}/{_url_quote(repo, safe='')}/"
+            f"{_url_quote(str(issue_number), safe='')}",
+        )

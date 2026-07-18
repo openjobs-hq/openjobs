@@ -23,8 +23,15 @@ function fakeClient(calls: Array<{ method: string; args: unknown[] }>, apiKey?: 
     agents: {
       me: record("agents.me", { id: "agent_1", name: "Test Agent", apiKey }),
       quickstart: record("agents.quickstart", { agentId: "agent_1", agentname: "test", name: "Test Agent", apiKey: "oj_live_secret_123456789", claimUrl: "https://openjobs.bot/claim/x", verificationCode: "abc", ownerEmail: "owner@example.com" }),
+      resume: record("agents.resume", { schema: "openjobs.agent-resume/v1", verification: { algorithm: "ed25519" } }),
+      feeCredits: record("agents.feeCredits", { currency: "WAGE", balance: 0, credits: [] }),
     },
-    platform: { status: record("platform.status", { ok: true }) },
+    platform: {
+      status: record("platform.status", { ok: true }),
+      leaderboard: record("platform.leaderboard", { category: "earnings", entries: [] }),
+      recentActivity: record("platform.recentActivity", { events: [] }),
+    },
+    integrations: { githubBounty: record("integrations.githubBounty", { found: true, job: { id: "job_1" } }) },
     inbox: { list: record("inbox.list", { threads: [] }) },
     tasks: { list: record("tasks.list", { tasks: [] }), markRead: record("tasks.markRead", { ok: true }) },
     jobs: {
@@ -47,8 +54,47 @@ test("unauthenticated server exposes setup and public discovery tools only", () 
   assert(tools.includes("openjobs_setup_status"));
   assert(tools.includes("openjobs_register_agent"));
   assert(tools.includes("openjobs_list_jobs"));
+  assert(tools.includes("openjobs_get_leaderboard"));
+  assert(tools.includes("openjobs_get_recent_activity"));
+  assert(tools.includes("openjobs_get_agent_resume"));
+  assert(tools.includes("openjobs_lookup_github_bounty"));
+  assert(!tools.includes("openjobs_get_my_fee_credits"));
   assert(!tools.includes("openjobs_whoami"));
   assert(!tools.includes("openjobs_apply_to_job"));
+});
+
+test("public data tools dispatch to the SDK without credentials", async () => {
+  const calls: Array<{ method: string; args: unknown[] }> = [];
+  const tools = createToolDefinitions({ config: config(), clientFactory: (options) => fakeClient(calls, options.apiKey) as never });
+  const call = async (name: string, args: Record<string, unknown>) => {
+    const tool = tools.find((item) => item.name === name)!;
+    const result = await tool.handler(args);
+    assert.equal(result.ok, true, `${name} should succeed`);
+  };
+  await call("openjobs_get_leaderboard", { category: "earnings", limit: 10 });
+  await call("openjobs_get_recent_activity", { limit: 5 });
+  await call("openjobs_get_agent_resume", { agentname: "test-bot" });
+  await call("openjobs_lookup_github_bounty", { owner: "octocat", repo: "hello-world", issueNumber: 42 });
+  assert.deepEqual(calls.map((c) => c.method), [
+    "platform.leaderboard",
+    "platform.recentActivity",
+    "agents.resume",
+    "integrations.githubBounty",
+  ]);
+  assert.deepEqual(calls[3].args, ["octocat", "hello-world", 42]);
+});
+
+test("fee credits tool requires an API key and forwards to agents.feeCredits", async () => {
+  const calls: Array<{ method: string; args: unknown[] }> = [];
+  const tools = createToolDefinitions({
+    config: config({ OPENJOBS_API_KEY: "oj_live_123" }),
+    clientFactory: (options) => fakeClient(calls, options.apiKey) as never,
+  });
+  const credits = tools.find((tool) => tool.name === "openjobs_get_my_fee_credits")!;
+  const result = await credits.handler({ currency: "WAGE" });
+  assert.equal(result.ok, true);
+  assert.equal(calls[0].method, "agents.feeCredits");
+  assert.deepEqual(calls[0].args, [{ currency: "WAGE" }]);
 });
 
 test("read-only authenticated mode hides mutating worker tools", () => {

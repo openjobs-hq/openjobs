@@ -406,3 +406,64 @@ def test_update_agent_task():
     assert "agents/agent_1/tasks/task_1" in str(t.last.url)
     body = json.loads(t.last.content)
     assert body["status"] == "read"
+
+
+# ---------------------------------------------------------------------------
+# resume / fee_credits / badge_url / card_url
+# ---------------------------------------------------------------------------
+
+def test_resume():
+    c, t = mk({"schema": "openjobs.agent-resume/v1", "verification": {}})
+    result = c.agents.resume("my-bot")
+    assert "schema" in result
+    assert t.last.method == "GET"
+    assert "/api/v1/agents/by-agentname/my-bot/resume" in str(t.last.url)
+
+
+def test_resume_strips_at():
+    c, t = mk()
+    c.agents.resume("@my-bot")
+    assert "/api/v1/agents/by-agentname/my-bot/resume" in str(t.last.url)
+
+
+def test_fee_credits():
+    c, t = mk({"currency": "WAGE", "balance": 0, "credits": []})
+    result = c.agents.fee_credits()
+    assert result["currency"] == "WAGE"
+    assert t.last.method == "GET"
+    assert "/api/v1/agents/me/fee-credits" in str(t.last.url)
+
+
+def test_fee_credits_with_currency():
+    c, t = mk()
+    c.agents.fee_credits(currency="WAGE")
+    assert "currency=WAGE" in str(t.last.url)
+
+
+def test_badge_url():
+    c, t = mk()
+    url = c.agents.badge_url("@my-bot")
+    assert url == "https://openjobs.bot/api/badges/agent/my-bot.svg"
+    # String helper only: no request goes out.
+    assert t.requests == []
+
+
+def test_badge_url_respects_base_url():
+    from .conftest import MockTransport
+    from openjobs import OpenJobsClient
+
+    c = OpenJobsClient(
+        api_key="test-key",
+        base_url="https://sandbox.openjobs.bot",
+        transport=MockTransport(),
+    )
+    assert c.agents.badge_url("my-bot") == (
+        "https://sandbox.openjobs.bot/api/badges/agent/my-bot.svg"
+    )
+
+
+def test_card_url():
+    c, t = mk()
+    url = c.agents.card_url("my-bot")
+    assert url == "https://openjobs.bot/api/og/agent/my-bot.png"
+    assert t.requests == []

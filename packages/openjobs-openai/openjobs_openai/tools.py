@@ -14,6 +14,7 @@ from openjobs_langchain._schemas import (
     AgentConversationsInput,
     AgentIdInput,
     AgentOversightInput,
+    AgentResumeInput,
     AgentSetWebhookInput,
     AgentTasksInput,
     AgentTaskUpdateInput,
@@ -32,12 +33,15 @@ from openjobs_langchain._schemas import (
     DisputeJobInput,
     EmptyInput,
     FeedbackInput,
+    FeeCreditsInput,
     GetJobInput,
+    GithubBountyInput,
     JobMessageInput,
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
     JudgesStakeInput,
+    LeaderboardInput,
     ListApplicationsInput,
     ListInboxInput,
     ListJobMessagesInput,
@@ -47,6 +51,7 @@ from openjobs_langchain._schemas import (
     MatchJobsInput,
     MineJobsInput,
     ProposalInput,
+    RecentActivityInput,
     RejectApplicationInput,
     RejectSubmissionInput,
     ReplyToThreadInput,
@@ -935,6 +940,76 @@ def judge_unstake_tool(client: OpenJobsClient) -> FunctionTool:
     )
 
 
+def get_leaderboard_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: LeaderboardInput):
+        return client.platform.leaderboard(category=p.category, limit=p.limit)
+    return _function_tool(
+        "get_leaderboard",
+        (
+            "Show the public OpenJobs leaderboard. "
+            "Categories: earnings, jobs, reputation, rookies, posters. No API key required."
+        ),
+        LeaderboardInput,
+        _invoke,
+    )
+
+
+def get_recent_activity_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: RecentActivityInput):
+        return client.platform.recent_activity(limit=p.limit)
+    return _function_tool(
+        "get_recent_activity",
+        (
+            "Show recent public OpenJobs marketplace activity (jobs posted, payouts, "
+            "boosts, new agents), newest first. No API key required."
+        ),
+        RecentActivityInput,
+        _invoke,
+    )
+
+
+def get_agent_resume_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: AgentResumeInput):
+        return client.agents.resume(p.agentname)
+    return _function_tool(
+        "get_agent_resume",
+        (
+            "Fetch an agent's signed, offline-verifiable work-history resume by agentname. "
+            "Includes stats, founder number, and an ed25519 verification block. No API key required."
+        ),
+        AgentResumeInput,
+        _invoke,
+    )
+
+
+def get_my_fee_credits_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: FeeCreditsInput):
+        return client.agents.fee_credits(currency=p.currency)
+    return _function_tool(
+        "get_my_fee_credits",
+        (
+            "Show the authenticated agent's non-withdrawable fee credits "
+            "(earned via referrals; auto-applied to listing fees and boosts)."
+        ),
+        FeeCreditsInput,
+        _invoke,
+    )
+
+
+def lookup_github_bounty_tool(client: OpenJobsClient) -> FunctionTool:
+    def _invoke(p: GithubBountyInput):
+        return client.integrations.github_bounty(p.owner, p.repo, p.issue_number)
+    return _function_tool(
+        "lookup_github_bounty",
+        (
+            "Resolve a GitHub issue to the OpenJobs bounty job funding it. "
+            "No API key required; a 404 means no live bounty references the issue."
+        ),
+        GithubBountyInput,
+        _invoke,
+    )
+
+
 def get_worker_tools(client: OpenJobsClient) -> list:
     """Return standard worker FunctionTools for a given client."""
     return [
@@ -990,6 +1065,11 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         platform_stats_tool(client),
         platform_status_tool(client),
         emission_config_tool(client),
+        get_leaderboard_tool(client),
+        get_recent_activity_tool(client),
+        get_agent_resume_tool(client),
+        get_my_fee_credits_tool(client),
+        lookup_github_bounty_tool(client),
         referrals_tool(client),
         feedback_tool(client),
         judge_stake_info_tool(client),

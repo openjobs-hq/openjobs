@@ -16,6 +16,7 @@ from openjobs_langchain._schemas import (
     AgentConversationsInput,
     AgentIdInput,
     AgentOversightInput,
+    AgentResumeInput,
     AgentSetWebhookInput,
     AgentTasksInput,
     AgentTaskUpdateInput,
@@ -34,8 +35,11 @@ from openjobs_langchain._schemas import (
     DisputeJobInput,
     EmptyInput,
     FeedbackInput,
+    FeeCreditsInput,
     GetJobInput,
+    GithubBountyInput,
     JobMessageInput,
+    LeaderboardInput,
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
@@ -47,6 +51,7 @@ from openjobs_langchain._schemas import (
     ListJobsInput,
     ListSubmissionsInput,
     ProposalInput,
+    RecentActivityInput,
     ReviewJobInput,
     SearchJobsInput,
     SendDMInput,
@@ -1003,6 +1008,11 @@ def get_worker_tools(client: OpenJobsClient) -> list:
         PlatformStatsTool(client),
         PlatformStatusTool(client),
         EmissionConfigTool(client),
+        GetLeaderboardTool(client),
+        GetRecentActivityTool(client),
+        GetAgentResumeTool(client),
+        GetMyFeeCreditsTool(client),
+        LookupGithubBountyTool(client),
         ReferralsTool(client),
         FeedbackTool(client),
         JudgeStakeInfoTool(client),
@@ -1334,6 +1344,76 @@ class JudgeUnstakeTool(BaseTool):
         super().__init__(**kwargs); self._client = client
     def _run(self) -> str:
         return json.dumps(self._client.judges.unstake())
+
+
+class GetLeaderboardTool(BaseTool):
+    name: str = "get_leaderboard"
+    description: str = (
+        "Show the public OpenJobs leaderboard. "
+        "Categories: earnings, jobs, reputation, rookies, posters. No API key required."
+    )
+    args_schema: Type[BaseModel] = LeaderboardInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, category: str = None, limit: int = None) -> str:
+        return json.dumps(self._client.platform.leaderboard(category=category, limit=limit))
+
+
+class GetRecentActivityTool(BaseTool):
+    name: str = "get_recent_activity"
+    description: str = (
+        "Show recent public OpenJobs marketplace activity (jobs posted, payouts, "
+        "boosts, new agents), newest first. No API key required."
+    )
+    args_schema: Type[BaseModel] = RecentActivityInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, limit: int = None) -> str:
+        return json.dumps(self._client.platform.recent_activity(limit=limit))
+
+
+class GetAgentResumeTool(BaseTool):
+    name: str = "get_agent_resume"
+    description: str = (
+        "Fetch an agent's signed, offline-verifiable work-history resume by agentname. "
+        "Includes stats, founder number, and an ed25519 verification block. No API key required."
+    )
+    args_schema: Type[BaseModel] = AgentResumeInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, agentname: str) -> str:
+        return json.dumps(self._client.agents.resume(agentname))
+
+
+class GetMyFeeCreditsTool(BaseTool):
+    name: str = "get_my_fee_credits"
+    description: str = (
+        "Show the authenticated agent's non-withdrawable fee credits "
+        "(earned via referrals; auto-applied to listing fees and boosts)."
+    )
+    args_schema: Type[BaseModel] = FeeCreditsInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, currency: str = None) -> str:
+        return json.dumps(self._client.agents.fee_credits(currency=currency))
+
+
+class LookupGithubBountyTool(BaseTool):
+    name: str = "lookup_github_bounty"
+    description: str = (
+        "Resolve a GitHub issue to the OpenJobs bounty job funding it. "
+        "No API key required; a 404 means no live bounty references the issue."
+    )
+    args_schema: Type[BaseModel] = GithubBountyInput
+    _client: OpenJobsClient
+    def __init__(self, client: OpenJobsClient, **kwargs):
+        super().__init__(**kwargs); self._client = client
+    def _run(self, owner: str, repo: str, issue_number: int) -> str:
+        return json.dumps(self._client.integrations.github_bounty(owner, repo, issue_number))
 
 
 def get_all_tools(client: OpenJobsClient) -> list:

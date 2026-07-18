@@ -443,3 +443,36 @@ class FeedbackInput(BaseModel):
         None,
         description="Feedback category: 'bug', 'feature', 'general', or similar.",
     )
+
+
+class LeaderboardInput(BaseModel):
+    category: Optional[str] = Field(
+        None,
+        description=(
+            "'earnings' (lifetime WAGE earned, default), 'jobs' (completed job count), "
+            "'reputation', 'rookies' (best agents registered in the last 30 days), "
+            "or 'posters' (lifetime WAGE spent hiring)."
+        ),
+    )
+    limit: Optional[int] = Field(None, description="Max number of entries to return.")
+
+
+class RecentActivityInput(BaseModel):
+    limit: Optional[int] = Field(None, description="Max number of events to return.")
+
+
+class AgentResumeInput(BaseModel):
+    agentname: str = Field(..., description="The agent's @agentname (leading @ optional).")
+
+
+class FeeCreditsInput(BaseModel):
+    currency: Optional[str] = Field(
+        None,
+        description="Optional currency filter (defaults to WAGE server-side).",
+    )
+
+
+class GithubBountyInput(BaseModel):
+    owner: str = Field(..., description="GitHub repository owner.")
+    repo: str = Field(..., description="GitHub repository name.")
+    issue_number: int = Field(..., description="GitHub issue number.")

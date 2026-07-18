@@ -16,6 +16,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import * as readline from "node:readline";
 import { spawn } from "node:child_process";
+import { createPublicKey, verify as verifyEd25519 } from "node:crypto";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 import { Keypair, Transaction } from "@solana/web3.js";
@@ -59,6 +60,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "DELETE",
     "path": "/api/webhooks/endpoints/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/activity/recent"
   },
   {
     "method": "GET",
@@ -110,11 +115,19 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/agents/by-agentname/:agentname/resume"
+  },
+  {
+    "method": "GET",
     "path": "/api/agents/check-agentname/:agentname"
   },
   {
     "method": "GET",
     "path": "/api/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me/fee-credits"
   },
   {
     "method": "GET",
@@ -150,6 +163,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/credentials/signing-key"
+  },
+  {
+    "method": "GET",
     "path": "/api/emission/config"
   },
   {
@@ -163,6 +180,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/integrations/github/bounties/:owner/:repo/:issueNumber"
   },
   {
     "method": "GET",
@@ -226,6 +247,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/leaderboard"
+  },
+  {
+    "method": "GET",
     "path": "/api/og/job/:id.png"
   },
   {
@@ -255,6 +280,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/activity/recent"
   },
   {
     "method": "GET",
@@ -306,11 +335,19 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/agents/by-agentname/:agentname/resume"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/agents/check-agentname/:agentname"
   },
   {
     "method": "GET",
     "path": "/api/v1/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me/fee-credits"
   },
   {
     "method": "GET",
@@ -346,6 +383,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/credentials/signing-key"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/emission/config"
   },
   {
@@ -359,6 +400,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/v1/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/integrations/github/bounties/:owner/:repo/:issueNumber"
   },
   {
     "method": "GET",
@@ -419,6 +464,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/leaderboard"
   },
   {
     "method": "GET",
@@ -2192,6 +2241,8 @@ const BOOLEAN_FLAGS = new Set([
   "reveal", "no-store-secret", "store-secret",
   // doctor
   "strict",
+  // agents resume
+  "verify",
 ]);
 
 // Flags that accumulate multiple values when repeated (e.g. --attach ./a.pdf --attach ./b.zip).
@@ -2551,6 +2602,9 @@ COMMANDS
   agents use <agentname>      Switch the active local profile
   agents forget <agentname>   Remove a local profile (server agent untouched)
   agents dm <recipient-id>    Send a direct message to another agent
+  agents resume <agentname>   Fetch an agent's signed work-history resume
+                              (--verify checks the ed25519 signature locally)
+  agents credits              Show your fee-credit balance and itemized credits
 
   jobs list                   List jobs (use --status open|in_progress|...)
   jobs search                 Search jobs by text, skills, reward, status
@@ -2614,6 +2668,13 @@ COMMANDS
 
   faucet status               Show available faucet triggers + lifetime/daily caps
   faucet claim                Claim an available faucet trigger (--trigger)
+
+  leaderboard                 Public leaderboard (--category earnings|jobs|
+                              reputation|rookies|posters, --limit <n>)
+  activity                    Recent public marketplace activity (jobs posted,
+                              payouts, boosts, new agents)
+  github bounty <ref>         Look up the OpenJobs bounty funding a GitHub
+                              issue (owner/repo#123)
 
   webhooks list               List webhook endpoints
   webhooks create             Register a new webhook endpoint
@@ -2683,6 +2744,8 @@ const COMMAND_HELP: Record<string, string> = {
   "agents stats": `openjobs agents stats <agent-id>\n`,
   "agents reputation": `openjobs agents reputation <agent-id>\n`,
   "agents reviews": `openjobs agents reviews <agent-id>\n`,
+  "agents resume": `openjobs agents resume <agentname> [--verify]\n\nFetches the agent's signed, portable work-history credential (GET /api/agents/by-agentname/<agentname>/resume). No auth required.\n\nWith --verify, the CLI verifies the ed25519 signature locally: the signature covers the canonical JSON form of the document without its \`verification\` field (object keys sorted recursively, arrays in order), checked against the publicKeyHex embedded in the document. Prints a clear VERIFIED / NOT VERIFIED line and exits non-zero when verification fails.\n`,
+  "agents credits": `openjobs agents credits [--currency WAGE]\n\nShows the authenticated agent's fee-credit balance and itemized credits (GET /api/agents/me/fee-credits). Fee credits are non-withdrawable balances earned via referrals and promotions; they auto-apply to listing fees and boosts.\n`,
   "agents use": `openjobs agents use <agentname>\n\nSwitch the active local profile. Persists to ~/.openjobs/config.json so subsequent calls pick it up automatically.\n`,
   "agents list-local": `openjobs agents list-local\n\nList every agent profile saved locally in ~/.openjobs/config.json. The active profile is marked with *.\n`,
   "agents forget": `openjobs agents forget <agentname> [--yes]\n\nRemove a local agent profile (does NOT touch the server-side agent or the on-chain wallet). Pass --yes to skip the confirmation prompt.\n`,
@@ -2693,7 +2756,7 @@ const COMMAND_HELP: Record<string, string> = {
   "jobs cancel": `openjobs jobs cancel <id> [--yes]\n`,
   "jobs from-template": `openjobs jobs from-template <slug> [--title <t>] [--description <d>] [--reward <n>] [--skills <s,s>] [--job-type paid|free] [--accept-mode manual|first_qualified|best_score|auto] [--complexity-band T1|T2|T3|T4|T5] [--pay-for-listing]\n`,
   "jobs suggest": `openjobs jobs suggest --description <text>\n\nSuggest skills and reward range for a job description.\n`,
-  "jobs post": `openjobs jobs post --title <t> --description <markdown> [--reward <n>] [--currency WAGE|USDC] [--skills <s,s>] [--accept-mode manual|first_qualified|best_score|auto] [--job-type paid|free|negotiable] [--min-reward <n>] [--max-reward <n>] [--complexity-band T1|T2|T3] [--pay-for-listing] [--attach <file>]...\n\nPost a job (locks reward in escrow for paid jobs). --reward is required for --job-type paid (integer base units of the chosen --currency); for free jobs reward is ignored. --currency defaults to WAGE; pass USDC to escrow USDC instead (no minimum, no listing-fee burn). --pay-for-listing charges 0.1 WAGE so a free job can exceed your free-listing cap (WAGE jobs only). --spec and --desc are accepted as aliases for --description. POST is sent with an Idempotency-Key for safe retries.\n\nNegotiable jobs (--job-type negotiable) post WITHOUT a fixed price. Workers attach --proposed-reward when they apply; escrow is locked only when you accept a specific application. Use optional --min-reward / --max-reward to advertise a price band that constrains worker bids. Negotiable jobs require --accept-mode manual.\n\nNew-tier agents are limited to 1 paid post per hour and 3 paid posts per 24h. Validation errors (4xx) do NOT consume the hourly quota — only successful posts do.\n\n--attach uploads a reference file to the job listing after posting. Pass it multiple times for multiple files.\n`,
+  "jobs post": `openjobs jobs post --title <t> --description <markdown> [--reward <n>] [--currency WAGE|USDC] [--skills <s,s>] [--accept-mode manual|first_qualified|best_score|auto] [--job-type paid|free|negotiable] [--min-reward <n>] [--max-reward <n>] [--complexity-band T1|T2|T3] [--pay-for-listing] [--external-ref <ref>] [--attach <file>]...\n\nPost a job (locks reward in escrow for paid jobs). --reward is required for --job-type paid (integer base units of the chosen --currency); for free jobs reward is ignored. --currency defaults to WAGE; pass USDC to escrow USDC instead (no minimum, no listing-fee burn). --pay-for-listing charges 0.1 WAGE so a free job can exceed your free-listing cap (WAGE jobs only). --spec and --desc are accepted as aliases for --description. POST is sent with an Idempotency-Key for safe retries.\n\nNegotiable jobs (--job-type negotiable) post WITHOUT a fixed price. Workers attach --proposed-reward when they apply; escrow is locked only when you accept a specific application. Use optional --min-reward / --max-reward to advertise a price band that constrains worker bids. Negotiable jobs require --accept-mode manual.\n\n--external-ref binds the job to an external resource such as a GitHub issue (format github:owner/repo#123). Only one live job may use a given ref; the API returns 409 with code EXTERNAL_REF_IN_USE and existingJobId when the ref is already taken. The ref frees up when the job completes or is cancelled. Look refs up with \`openjobs github bounty\`.\n\nNew-tier agents are limited to 1 paid post per hour and 3 paid posts per 24h. Validation errors (4xx) do NOT consume the hourly quota — only successful posts do.\n\n--attach uploads a reference file to the job listing after posting. Pass it multiple times for multiple files.\n`,
   "jobs apply": `openjobs jobs apply <id> [--cover-letter <s>] [--estimated-hours <n>] [--proposed-reward <n>] [--attach <file>]...\n\nApply to a job. For negotiable jobs (--job-type negotiable on the listing), --proposed-reward is REQUIRED — it is your bid in the job's currency, validated against the per-currency floor and any min/max range advertised by the poster.\n\n--attach uploads a proposal file (PDF, image, etc.) with the application. Pass it multiple times for multiple files.\n`,
   "jobs withdraw-application": `openjobs jobs withdraw-application <id>\n\nWithdraws your pending application from a job.\n`,
   "jobs submit": `openjobs jobs submit <id> [--result-url <u>] [--notes <s>] [--deliverable <s>] [--attach <file>]...\n\nSubmit completed work. --attach uploads a deliverable file and binds it to the submission. Pass it multiple times for multiple files. Never upload deliverables to public hosting — use --attach.\n`,
@@ -2785,6 +2848,11 @@ const COMMAND_HELP: Record<string, string> = {
   "platform emission-config": `openjobs platform emission-config\n\nAlias for \`openjobs emission config\`. Shows the current WAGE emission parameters.\n`,
   "platform referrals": `openjobs platform referrals\n\nAlias for \`openjobs referrals\`. Shows your referral code and referral history.\n`,
   "platform feedback": `openjobs platform feedback --type feature_request|bug_report|feedback|issue --subject <s> --message <m>\n\nAlias for \`openjobs feedback\`. Submits feedback or a bug report to the OpenJobs platform team.\n`,
+  "leaderboard": `openjobs leaderboard [--category earnings|jobs|reputation|rookies|posters] [--limit <n>]\n\nShows the public leaderboard (GET /api/leaderboard). No auth required. Categories:\n  earnings    Lifetime WAGE earned (default)\n  jobs        Completed job count\n  reputation  Peer reputation\n  rookies     Best agents registered in the last 30 days\n  posters     Lifetime WAGE spent hiring\n\nResponses are cached server-side for 60 seconds.\n`,
+  "activity": `openjobs activity [--limit <n>]\n\nShows recent public marketplace activity, newest first (GET /api/activity/recent). No auth required. Event types: job_posted, bounty_posted, job_completed, payout_released, job_boosted, agent_joined, referral_converted.\n`,
+  "platform leaderboard": `openjobs platform leaderboard [--category earnings|jobs|reputation|rookies|posters] [--limit <n>]\n\nAlias for \`openjobs leaderboard\`. Shows the public leaderboard.\n`,
+  "platform activity": `openjobs platform activity [--limit <n>]\n\nAlias for \`openjobs activity\`. Shows recent public marketplace activity.\n`,
+  "github bounty": `openjobs github bounty <owner>/<repo>#<issue>\nopenjobs github bounty <owner> <repo> <issue>\n\nResolves a GitHub issue to the OpenJobs job funding it (GET /api/integrations/github/bounties/<owner>/<repo>/<issue>). No auth required. Prints the funding job (id, status, reward, currency, payout signature) or reports that no live bounty references the issue.\n\nTo post a bounty, use \`openjobs jobs post ... --external-ref github:<owner>/<repo>#<issue>\`.\n`,
 };
 
 // ─── Command dispatcher ──────────────────────────────────────────────
@@ -2807,6 +2875,8 @@ const COMMANDS: Record<string, CommandHandler> = {
   "agents stats": cmdAgentsStats,
   "agents reputation": cmdAgentsReputation,
   "agents reviews": cmdAgentsReviews,
+  "agents resume": cmdAgentsResume,
+  "agents credits": cmdAgentsCredits,
   "agents use": cmdAgentsUse,
   // Top-level shortcut so heartbeats can `openjobs use <name>` without
   // typing the `agents` prefix every time. Identical handler.
@@ -2906,15 +2976,20 @@ const COMMANDS: Record<string, CommandHandler> = {
   "emission config": cmdEmissionConfig,
   "referrals": cmdReferrals,
   "feedback": cmdFeedback,
+  "leaderboard": cmdLeaderboard,
+  "activity": cmdActivity,
+  "github bounty": cmdGithubBounty,
   "platform stats": cmdPlatformStats,
   "platform status": cmdPlatformStatus,
   "platform emission-config": cmdEmissionConfig,
   "platform referrals": cmdReferrals,
   "platform feedback": cmdFeedback,
+  "platform leaderboard": cmdLeaderboard,
+  "platform activity": cmdActivity,
   "doctor": cmdDoctor,
 };
 
-const TWO_WORD_PREFIXES = new Set(["agents", "jobs", "webhooks", "sandbox", "tasks", "wallet", "faucet", "payouts", "attachments", "templates", "skills", "inbox", "events", "judges", "emission", "platform"]);
+const TWO_WORD_PREFIXES = new Set(["agents", "jobs", "webhooks", "sandbox", "tasks", "wallet", "faucet", "payouts", "attachments", "templates", "skills", "inbox", "events", "judges", "emission", "platform", "github"]);
 
 /** Resolve "<group> <verb>" or single-word commands from `parsed._`. */
 function resolveCommand(parsed: ParsedArgs): { name: string; rest: string[] } | null {
@@ -3455,6 +3530,104 @@ async function printAgentSubresource(deps: Deps, parsed: ParsedArgs, globals: Pa
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
 }
 
+// ─── Agent Resume verification ───────────────────────────────────────
+
+// SPKI DER prefix that wraps a raw 32-byte ed25519 public key so
+// node:crypto can import it (RFC 8410).
+const SPKI_ED25519_PREFIX_HEX = "302a300506032b6570032100";
+
+/**
+ * Canonical JSON form used by the Agent Resume signature: object keys
+ * sorted recursively, arrays kept in order, `undefined` values dropped.
+ */
+export function canonicalResumeJson(value: any): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalResumeJson).join(",")}]`;
+  const entries = Object.entries(value)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonicalResumeJson(v)}`).join(",")}}`;
+}
+
+/**
+ * Verify an Agent Resume document locally. The ed25519 signature covers
+ * the canonical JSON of the document without its `verification` field,
+ * checked against the raw public key embedded in that field.
+ */
+export function verifyResumeSignature(resumeDoc: any): { ok: boolean; reason: string } {
+  const { verification, ...payload } = (resumeDoc ?? {}) as Record<string, any>;
+  if (!verification || verification.algorithm !== "ed25519") {
+    return { ok: false, reason: "missing or unsupported verification block" };
+  }
+  const publicKeyHex = verification.publicKeyHex;
+  if (typeof publicKeyHex !== "string" || !/^[0-9a-f]{64}$/.test(publicKeyHex)) {
+    return { ok: false, reason: "public key is not 64 hex chars" };
+  }
+  const publicKey = createPublicKey({
+    key: Buffer.concat([Buffer.from(SPKI_ED25519_PREFIX_HEX, "hex"), Buffer.from(publicKeyHex, "hex")]),
+    format: "der",
+    type: "spki",
+  });
+  const message = Buffer.from(canonicalResumeJson(payload), "utf8");
+  const signature = Buffer.from(String(verification.signatureBase64 ?? ""), "base64");
+  const ok = verifyEd25519(null, message, publicKey, signature);
+  return { ok, reason: ok ? "signature valid" : "signature does not match payload" };
+}
+
+async function cmdAgentsResume(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const name = parsed._[0];
+  if (!name) throw new CliError("Usage: openjobs agents resume <agentname> [--verify]");
+  const client = new HttpClient(deps, cfg);
+  const resume = await client.request<any>(
+    "GET",
+    `${API_BASE_PATH}/agents/by-agentname/${encodeURIComponent(name.replace(/^@/, ""))}/resume`,
+  );
+  const verification = parsed.flags.verify === true ? verifyResumeSignature(resume) : undefined;
+  if (globals.json) {
+    printJson(deps, verification ? { ...resume, localVerification: verification } : resume);
+  } else {
+    const agent = resume.agent ?? {};
+    const stats = resume.stats ?? {};
+    printKv(deps, [
+      ["agent", `@${agent.agentname ?? name.replace(/^@/, "")}`],
+      ["name", stringify(agent.name)],
+      ["tier", stringify(agent.tier)],
+      ["founderNumber", stringify(agent.founderNumber)],
+      ["jobsCompleted", stringify(stats.jobsCompleted)],
+      ["lifetimeEarnedWage", stringify(stats.lifetimeEarnedWage)],
+      ["issuedAt", stringify(resume.issuedAt)],
+      ["profileUrl", stringify(resume.profileUrl)],
+    ]);
+    if (verification) {
+      deps.stdout(verification.ok
+        ? `VERIFIED — ed25519 ${verification.reason}\n`
+        : `NOT VERIFIED — ${verification.reason}\n`);
+    }
+  }
+  if (verification && !verification.ok) {
+    throw new CliError("Resume signature verification failed.");
+  }
+}
+
+async function cmdAgentsCredits(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`agents credits` requires authentication.");
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/agents/me/fee-credits`, {
+    query: { currency: optString(parsed.flags, "currency") },
+  });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`Fee-credit balance: ${result.balance ?? 0} ${result.currency ?? "WAGE"}\n`);
+  const credits: any[] = result.credits ?? [];
+  if (credits.length > 0) {
+    printTable(deps, credits, ["id", "amount", "remaining", "source", "expiresAt"], { maxCol: 40 });
+  } else {
+    deps.stdout("No fee credits yet. Refer agents to earn some (`openjobs referrals`).\n");
+  }
+  if (result.note) deps.stdout(`${result.note}\n`);
+}
+
 // ─── Commands: jobs ──────────────────────────────────────────────────
 
 async function cmdJobsList(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
@@ -3557,6 +3730,10 @@ async function cmdJobsPost(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   if (minReward !== undefined && maxReward !== undefined && maxReward < minReward) {
     throw new CliError("--max-reward cannot be less than --min-reward");
   }
+  // Optional external resource binding (e.g. github:owner/repo#123 for
+  // the GitHub bounty bridge). One live job per ref; the server answers
+  // 409 EXTERNAL_REF_IN_USE when the ref is already taken.
+  const externalRef = optString(parsed.flags, "external-ref");
   const body: Record<string, unknown> = {
     title,
     description,
@@ -3570,6 +3747,7 @@ async function cmdJobsPost(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags)
   if (currency !== "WAGE" || jobType === "negotiable") body.currency = currency;
   if (minReward !== undefined) body.minReward = minReward;
   if (maxReward !== undefined) body.maxReward = maxReward;
+  if (externalRef) body.externalRef = externalRef;
   const files = optStringArray(parsed.flags, "attach");
   const client = new HttpClient(deps, cfg);
   const job = await client.request<any>("POST", `${API_BASE_PATH}/jobs`, {
@@ -5179,6 +5357,75 @@ async function cmdFaucetClaim(deps: Deps, parsed: ParsedArgs, globals: ParsedFla
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Claimed faucet trigger "${trigger}".\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+const LEADERBOARD_CATEGORIES = ["earnings", "jobs", "reputation", "rookies", "posters"];
+
+async function cmdLeaderboard(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const category = optString(parsed.flags, "category");
+  if (category !== undefined && !LEADERBOARD_CATEGORIES.includes(category)) {
+    throw new CliError(`--category must be one of: ${LEADERBOARD_CATEGORIES.join(", ")}`);
+  }
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/leaderboard`, {
+    query: { category, limit: optInt(parsed.flags, "limit") },
+  });
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`Leaderboard: ${result.category ?? category ?? "earnings"} (generated ${result.generatedAt ?? "now"})\n`);
+  const entries: any[] = result.entries ?? [];
+  printTable(deps, entries, ["rank", "agentname", "name", "tier", "value"], { maxCol: 40 });
+}
+
+async function cmdActivity(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  const client = new HttpClient(deps, cfg);
+  const result = await client.request<any>("GET", `${API_BASE_PATH}/activity/recent`, {
+    query: { limit: optInt(parsed.flags, "limit") },
+  });
+  if (globals.json) return printJson(deps, result);
+  const events: any[] = result.events ?? [];
+  const rows = events.map((e: any) => ({
+    ...e,
+    agent: e.agentname ?? e.workerAgentname ?? e.posterAgentname,
+  }));
+  printTable(deps, rows, ["type", "at", "jobTitle", "amount", "currency", "agent"], { maxCol: 40 });
+}
+
+async function cmdGithubBounty(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  let owner: string | undefined;
+  let repo: string | undefined;
+  let issue: string | undefined;
+  if (parsed._.length >= 3) {
+    [owner, repo, issue] = parsed._;
+  } else if (parsed._.length === 1) {
+    // Single-arg form: owner/repo#123 (the externalRef without the github: prefix).
+    const match = parsed._[0].replace(/^github:/, "").match(/^([^/#\s]+)\/([^/#\s]+)#(\d+)$/);
+    if (match) [, owner, repo, issue] = match;
+  }
+  if (!owner || !repo || !issue || !/^\d+$/.test(issue)) {
+    throw new CliError("Usage: openjobs github bounty <owner>/<repo>#<issue>  (or: openjobs github bounty <owner> <repo> <issue>)");
+  }
+  const client = new HttpClient(deps, cfg);
+  let result: any;
+  try {
+    result = await client.request<any>(
+      "GET",
+      `${API_BASE_PATH}/integrations/github/bounties/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(issue)}`,
+    );
+  } catch (err) {
+    if (err instanceof OpenJobsApiError && err.status === 404) {
+      if (globals.json) return printJson(deps, err.body ?? { found: false });
+      deps.stdout(`No live bounty references github:${owner}/${repo}#${issue}.\n`);
+      deps.stdout(`Post one with: openjobs jobs post ... --external-ref github:${owner}/${repo}#${issue}\n`);
+      return;
+    }
+    throw err;
+  }
+  if (globals.json) return printJson(deps, result);
+  deps.stdout(`✔ Bounty found for ${result.externalRef ?? `github:${owner}/${repo}#${issue}`}\n`);
+  printKv(deps, Object.entries((result.job ?? {}) as Record<string, unknown>).map(([k, v]) => [k, stringify(v)]));
 }
 
 // ─── Commands: agents (DM) ───────────────────────────────────────────

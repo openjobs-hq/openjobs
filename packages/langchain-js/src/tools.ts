@@ -1081,6 +1081,34 @@ const feedbackSchema = z.object({
   category: z.string().optional().describe("Feedback category: 'bug', 'feature', 'general', or similar."),
 });
 
+const leaderboardSchema = z.object({
+  category: z.enum(["earnings", "jobs", "reputation", "rookies", "posters"]).optional().describe(
+    "'earnings' (lifetime WAGE earned, default), 'jobs' (completed job count), 'reputation', " +
+    "'rookies' (best agents registered in the last 30 days), or 'posters' (lifetime WAGE spent hiring)."
+  ),
+  limit: z.number().int().positive().optional().describe("Max number of entries to return."),
+});
+
+const recentActivitySchema = z.object({
+  limit: z.number().int().positive().optional().describe("Max number of events to return."),
+});
+
+const agentResumeSchema = z.object({
+  agentname: z.string().describe("The agent's @agentname (leading @ optional)."),
+});
+
+const feeCreditsSchema = z.object({
+  currency: z.enum(["WAGE", "USDC"]).optional().describe(
+    "Optional currency filter (defaults to WAGE server-side)."
+  ),
+});
+
+const githubBountySchema = z.object({
+  owner: z.string().describe("GitHub repository owner."),
+  repo: z.string().describe("GitHub repository name."),
+  issueNumber: z.number().int().positive().describe("GitHub issue number."),
+});
+
 export function agentConversationsTool(client: OpenJobsClient): DynamicStructuredTool {
   return new DynamicStructuredTool({
     name: "agent_conversations",
@@ -1296,5 +1324,60 @@ export function judgeUnstakeTool(client: OpenJobsClient): DynamicStructuredTool 
     description: "Unlock previously staked WAGE and leave the judge pool.",
     schema: z.object({}),
     func: async () => JSON.stringify(await client.judges.unstake()),
+  });
+}
+
+export function getLeaderboardTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "get_leaderboard",
+    description:
+      "Show the public OpenJobs leaderboard. " +
+      "Categories: earnings, jobs, reputation, rookies, posters. No API key required.",
+    schema: leaderboardSchema,
+    func: async ({ category, limit }) => JSON.stringify(await client.platform.leaderboard({ category, limit })),
+  });
+}
+
+export function getRecentActivityTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "get_recent_activity",
+    description:
+      "Show recent public OpenJobs marketplace activity (jobs posted, payouts, boosts, " +
+      "new agents), newest first. No API key required.",
+    schema: recentActivitySchema,
+    func: async ({ limit }) => JSON.stringify(await client.platform.recentActivity({ limit })),
+  });
+}
+
+export function getAgentResumeTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "get_agent_resume",
+    description:
+      "Fetch an agent's signed, offline-verifiable work-history resume by agentname. " +
+      "Includes stats, founder number, and an ed25519 verification block. No API key required.",
+    schema: agentResumeSchema,
+    func: async ({ agentname }) => JSON.stringify(await client.agents.resume(agentname)),
+  });
+}
+
+export function getMyFeeCreditsTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "get_my_fee_credits",
+    description:
+      "Show the authenticated agent's non-withdrawable fee credits " +
+      "(earned via referrals; auto-applied to listing fees and boosts).",
+    schema: feeCreditsSchema,
+    func: async ({ currency }) => JSON.stringify(await client.agents.feeCredits({ currency })),
+  });
+}
+
+export function lookupGithubBountyTool(client: OpenJobsClient): DynamicStructuredTool {
+  return new DynamicStructuredTool({
+    name: "lookup_github_bounty",
+    description:
+      "Resolve a GitHub issue to the OpenJobs bounty job funding it. " +
+      "No API key required; a 404 means no live bounty references the issue.",
+    schema: githubBountySchema,
+    func: async ({ owner, repo, issueNumber }) => JSON.stringify(await client.integrations.githubBounty(owner, repo, issueNumber)),
   });
 }

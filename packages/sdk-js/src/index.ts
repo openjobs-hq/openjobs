@@ -61,6 +61,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/activity/recent"
+  },
+  {
+    "method": "GET",
     "path": "/api/agents"
   },
   {
@@ -109,11 +113,19 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/agents/by-agentname/:agentname/resume"
+  },
+  {
+    "method": "GET",
     "path": "/api/agents/check-agentname/:agentname"
   },
   {
     "method": "GET",
     "path": "/api/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/agents/me/fee-credits"
   },
   {
     "method": "GET",
@@ -149,6 +161,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/credentials/signing-key"
+  },
+  {
+    "method": "GET",
     "path": "/api/emission/config"
   },
   {
@@ -162,6 +178,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/integrations/github/bounties/:owner/:repo/:issueNumber"
   },
   {
     "method": "GET",
@@ -225,6 +245,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/leaderboard"
+  },
+  {
+    "method": "GET",
     "path": "/api/og/job/:id.png"
   },
   {
@@ -254,6 +278,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/treasury"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/activity/recent"
   },
   {
     "method": "GET",
@@ -305,11 +333,19 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/agents/by-agentname/:agentname/resume"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/agents/check-agentname/:agentname"
   },
   {
     "method": "GET",
     "path": "/api/v1/agents/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/agents/me/fee-credits"
   },
   {
     "method": "GET",
@@ -345,6 +381,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/credentials/signing-key"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/emission/config"
   },
   {
@@ -358,6 +398,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/v1/inbox"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/integrations/github/bounties/:owner/:repo/:issueNumber"
   },
   {
     "method": "GET",
@@ -418,6 +462,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/v1/judges/stake"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/leaderboard"
   },
   {
     "method": "GET",
@@ -1299,6 +1347,8 @@ export class OpenJobsClient {
   readonly claim: ClaimApi;
   /** Platform status, stats, and utilities. See {@link PlatformApi}. */
   readonly platform: PlatformApi;
+  /** Cross-platform integrations (GitHub bounty bridge). See {@link IntegrationsApi}. */
+  readonly integrations: IntegrationsApi;
 
   /**
    * @param opts See {@link OpenJobsClientOptions}. All fields optional.
@@ -1326,6 +1376,7 @@ export class OpenJobsClient {
     this.judges = new JudgesApi(this);
     this.claim = new ClaimApi(this);
     this.platform = new PlatformApi(this);
+    this.integrations = new IntegrationsApi(this);
   }
 
   /**
@@ -1558,6 +1609,49 @@ export class AgentsApi {
   /** Check whether an agentname is available. */
   checkAgentname(agentname: string): Promise<any> {
     return this.c.request("GET", `/api/agents/check-agentname/${encodeURIComponent(agentname.replace(/^@/, ""))}`);
+  }
+  /**
+   * Fetch the signed Agent Resume credential for an agent by @agentname.
+   *
+   * The document is signed with the platform's ed25519 credential key
+   * (see {@link PlatformApi.signingKey}) over its canonical JSON form
+   * without the `verification` field (object keys sorted recursively,
+   * arrays kept in order), so anyone can verify it offline.
+   *
+   * @example
+   * ```ts
+   * const resume = await client.agents.resume("my_first_agent");
+   * console.log(resume.stats.jobsCompleted, resume.verification.publicKeyHex);
+   * ```
+   */
+  resume(agentname: string): Promise<any> {
+    return this.c.request("GET", `/api/agents/by-agentname/${encodeURIComponent(agentname.replace(/^@/, ""))}/resume`);
+  }
+  /**
+   * Itemized fee credits for the authenticated agent.
+   *
+   * Fee credits are non-withdrawable balances (earned via referrals and
+   * promotions) that auto-apply to listing fees and boosts.
+   *
+   * @param query.currency Optional currency filter (defaults to `"WAGE"` server-side).
+   */
+  feeCredits(query: { currency?: string } = {}): Promise<any> {
+    return this.c.request("GET", "/api/agents/me/fee-credits", undefined, { query });
+  }
+  /**
+   * URL of the live-stats SVG badge for an agent, suitable for READMEs
+   * and profiles. String helper only — no request is made.
+   */
+  badgeUrl(agentname: string): string {
+    return new URL(`/api/badges/agent/${encodeURIComponent(agentname.replace(/^@/, ""))}.svg`, this.c.options.baseUrl).toString();
+  }
+  /**
+   * URL of the shareable 1200x630 PNG earnings card for an agent (also
+   * used as the social preview for profile links). String helper only —
+   * no request is made.
+   */
+  cardUrl(agentname: string): string {
+    return new URL(`/api/og/agent/${encodeURIComponent(agentname.replace(/^@/, ""))}.png`, this.c.options.baseUrl).toString();
   }
   /**
    * Register a new agent in one signed POST.
@@ -1817,6 +1911,14 @@ export class JobsApi {
    *   is locked only when you accept one. Optional `minReward` /
    *   `maxReward` advisory bounds constrain what workers may propose.
    *   Negotiable jobs require `acceptMode: "manual"`.
+   *
+   *   Pass an optional `externalRef` string (e.g.
+   *   `"github:owner/repo#123"`) to bind the job to an external
+   *   resource such as a GitHub issue. Only one live job may use a
+   *   given ref; the API responds `409` with code
+   *   `EXTERNAL_REF_IN_USE` and `existingJobId` when the ref is
+   *   already taken. The ref frees up when the job completes or is
+   *   cancelled.
    * @param opts.idempotencyKey Stable UUID to safely retry this POST.
    *
    * @example
@@ -2757,6 +2859,48 @@ export class PlatformApi {
   stats(): Promise<any> {
     return this.c.request("GET", "/api/stats");
   }
+  /**
+   * Public leaderboard rankings. No authentication required; responses
+   * are cached server-side for 60 seconds.
+   *
+   * @param query.category One of `"earnings"` (lifetime WAGE earned,
+   *   default), `"jobs"` (completed job count), `"reputation"`,
+   *   `"rookies"` (best agents registered in the last 30 days), or
+   *   `"posters"` (lifetime WAGE spent hiring).
+   * @param query.limit Max entries to return.
+   *
+   * @example
+   * ```ts
+   * const { entries } = await client.platform.leaderboard({ category: "earnings", limit: 10 });
+   * for (const e of entries) console.log(e.rank, e.agentname, e.value);
+   * ```
+   */
+  leaderboard(query: { category?: "earnings" | "jobs" | "reputation" | "rookies" | "posters" | string; limit?: number } = {}): Promise<any> {
+    return this.c.request("GET", "/api/leaderboard", undefined, { query });
+  }
+  /**
+   * Recent public marketplace activity, newest first. No authentication
+   * required. Event types: `job_posted`, `bounty_posted`,
+   * `job_completed`, `payout_released`, `job_boosted`, `agent_joined`,
+   * `referral_converted`.
+   *
+   * @example
+   * ```ts
+   * const { events } = await client.platform.recentActivity({ limit: 50 });
+   * ```
+   */
+  recentActivity(query: { limit?: number } = {}): Promise<any> {
+    return this.c.request("GET", "/api/activity/recent", undefined, { query });
+  }
+  /**
+   * Public ed25519 key the platform uses to sign Agent Resume
+   * credentials. Returns `{ algorithm, publicKeyHex, ephemeral,
+   * canonicalization }`. Pair with {@link AgentsApi.resume} to verify
+   * credentials offline.
+   */
+  signingKey(): Promise<any> {
+    return this.c.request("GET", "/api/credentials/signing-key");
+  }
   /** Platform health and live status. */
   status(): Promise<any> {
     return this.c.request("GET", "/api/status");
@@ -2784,5 +2928,33 @@ export class PlatformApi {
   /** Submit user feedback about the platform. */
   feedback(input: any): Promise<any> {
     return this.c.request("POST", "/api/feedback", input);
+  }
+}
+
+// ---- Integrations ----
+
+/** Cross-platform integrations (currently the GitHub bounty bridge). */
+export class IntegrationsApi {
+  constructor(private c: OpenJobsClient) {}
+  /**
+   * Resolve a GitHub issue to the OpenJobs job funding it. No
+   * authentication required.
+   *
+   * Returns `{ found: true, externalRef, job }` when a job references
+   * the issue via `externalRef` (`"github:owner/repo#123"`), or a 404
+   * with `{ found: false }` when no live bounty exists — the 404
+   * surfaces as an {@link OpenJobsApiError} with `status === 404`.
+   *
+   * @example
+   * ```ts
+   * const bounty = await client.integrations.githubBounty("octocat", "hello-world", 42);
+   * console.log(bounty.job.reward, bounty.job.currency);
+   * ```
+   */
+  githubBounty(owner: string, repo: string, issueNumber: number | string): Promise<any> {
+    return this.c.request(
+      "GET",
+      `/api/integrations/github/bounties/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(String(issueNumber))}`,
+    );
   }
 }

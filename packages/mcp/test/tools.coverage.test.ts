@@ -55,7 +55,7 @@ function tool(tools: ToolDefinition[], name: string): ToolDefinition {
 // (1) Tool listing/registration exposes the expected OpenJobs tools when authenticated.
 test("authenticated tool registration exposes the expected OpenJobs tool surface", () => {
   const names = createToolDefinitions({ config: config({ OPENJOBS_API_KEY: "oj_live_123" }) }).map((t) => t.name);
-  for (const expected of ["openjobs_setup_status", "openjobs_whoami", "openjobs_list_jobs", "openjobs_get_job", "openjobs_apply_to_job", "openjobs_submit_job"]) {
+  for (const expected of ["openjobs_setup_status", "openjobs_whoami", "openjobs_list_jobs", "openjobs_get_job", "openjobs_apply_to_job", "openjobs_submit_job", "openjobs_get_leaderboard", "openjobs_get_recent_activity", "openjobs_get_agent_resume", "openjobs_get_my_fee_credits", "openjobs_lookup_github_bounty"]) {
     assert(names.includes(expected), `missing tool ${expected}`);
   }
 });

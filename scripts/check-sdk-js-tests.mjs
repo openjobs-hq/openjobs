@@ -146,6 +146,55 @@ async function assertRetryBehavior(OpenJobsClient) {
   assert.equal(mockFetch.calls[1].url, "https://openjobs.bot/api/v1/jobs?status=open");
 }
 
+async function assertPublicDataEndpoints(OpenJobsClient) {
+  const mockFetch = createMockFetch(() => jsonResponse({ ok: true }));
+  const client = new OpenJobsClient({ fetch: mockFetch, maxRetries: 0 });
+
+  await client.platform.leaderboard({ category: "earnings", limit: 10 });
+  await client.platform.recentActivity({ limit: 5 });
+  await client.platform.signingKey();
+  await client.agents.resume("@growth-bot");
+  await client.integrations.githubBounty("octocat", "hello-world", 42);
+
+  assert.deepEqual(mockFetch.calls.map((call) => call.url), [
+    "https://openjobs.bot/api/v1/leaderboard?category=earnings&limit=10",
+    "https://openjobs.bot/api/v1/activity/recent?limit=5",
+    "https://openjobs.bot/api/v1/credentials/signing-key",
+    "https://openjobs.bot/api/v1/agents/by-agentname/growth-bot/resume",
+    "https://openjobs.bot/api/v1/integrations/github/bounties/octocat/hello-world/42",
+  ]);
+  for (const { init } of mockFetch.calls) {
+    assert.equal(init.method, "GET");
+    assert.equal(init.headers["x-api-key"], undefined);
+  }
+}
+
+async function assertFeeCreditsEndpoint(OpenJobsClient) {
+  const mockFetch = createMockFetch(() => jsonResponse({ currency: "WAGE", balance: 0, credits: [] }));
+  const client = new OpenJobsClient({ apiKey: "test-key", fetch: mockFetch, maxRetries: 0 });
+
+  await client.agents.feeCredits({ currency: "WAGE" });
+
+  assert.equal(mockFetch.calls.length, 1);
+  const [{ url, init }] = mockFetch.calls;
+  assert.equal(url, "https://openjobs.bot/api/v1/agents/me/fee-credits?currency=WAGE");
+  assert.equal(init.method, "GET");
+  assert.equal(init.headers["x-api-key"], "test-key");
+}
+
+async function assertBadgeAndCardUrlHelpers(OpenJobsClient) {
+  const client = new OpenJobsClient({ fetch: createMockFetch(() => jsonResponse({})) });
+  assert.equal(client.agents.badgeUrl("@growth-bot"), "https://openjobs.bot/api/badges/agent/growth-bot.svg");
+  assert.equal(client.agents.cardUrl("growth-bot"), "https://openjobs.bot/api/og/agent/growth-bot.png");
+
+  const custom = new OpenJobsClient({
+    baseUrl: "https://sandbox.openjobs.bot",
+    fetch: createMockFetch(() => jsonResponse({})),
+  });
+  assert.equal(custom.agents.badgeUrl("growth-bot"), "https://sandbox.openjobs.bot/api/badges/agent/growth-bot.svg");
+  assert.equal(custom.agents.cardUrl("growth-bot"), "https://sandbox.openjobs.bot/api/og/agent/growth-bot.png");
+}
+
 async function assertWebhookHmacHelpers(OpenJobsClient) {
   assert.ok(globalThis.crypto?.subtle, "Web Crypto SubtleCrypto must be available for webhook HMAC tests");
   const client = new OpenJobsClient({ fetch: createMockFetch(() => jsonResponse({})) });
@@ -171,6 +220,9 @@ await assertRequestHeadersAndBaseUrl(sdk.OpenJobsClient);
 await assertSandboxEnvironment(sdk.OpenJobsClient);
 await assertErrorHandling(sdk.OpenJobsClient, sdk.OpenJobsApiError);
 await assertRetryBehavior(sdk.OpenJobsClient);
+await assertPublicDataEndpoints(sdk.OpenJobsClient);
+await assertFeeCreditsEndpoint(sdk.OpenJobsClient);
+await assertBadgeAndCardUrlHelpers(sdk.OpenJobsClient);
 await assertWebhookHmacHelpers(sdk.OpenJobsClient);
 
 console.log("OK @openjobs/sdk behavioral tests passed.");

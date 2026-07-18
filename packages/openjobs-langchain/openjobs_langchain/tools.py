@@ -14,6 +14,7 @@ from ._schemas import (
     AgentConversationInput,
     AgentConversationsInput,
     AgentOversightInput,
+    AgentResumeInput,
     AgentSetWebhookInput,
     AgentTasksInput,
     AgentTaskUpdateInput,
@@ -25,6 +26,8 @@ from ._schemas import (
     DisputeJobInput,
     EmptyInput,
     FeedbackInput,
+    FeeCreditsInput,
+    GithubBountyInput,
     AgentIdInput,
     AttachmentIdInput,
     BoostJobInput,
@@ -32,6 +35,7 @@ from ._schemas import (
     AttachmentUploadInput,
     AttachmentVisibilityInput,
     JobMessageInput,
+    LeaderboardInput,
     JobIdInput,
     JobSuggestInput,
     JobTemplateInput,
@@ -41,6 +45,7 @@ from ._schemas import (
     ListJobsInput,
     MarkInboxReadInput,
     ProposalInput,
+    RecentActivityInput,
     ReviewJobInput,
     SearchJobsInput,
     SendDMInput,
@@ -1106,4 +1111,79 @@ def judge_unstake_tool(client: OpenJobsClient) -> StructuredTool:
         name="judge_unstake",
         description="Unlock previously staked WAGE and leave the judge pool.",
         args_schema=EmptyInput,
+    )
+
+
+def get_leaderboard_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(category: Optional[str] = None, limit: Optional[int] = None) -> str:
+        return json.dumps(client.platform.leaderboard(category=category, limit=limit))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="get_leaderboard",
+        description=(
+            "Show the public OpenJobs leaderboard. "
+            "Categories: earnings, jobs, reputation, rookies, posters. No API key required."
+        ),
+        args_schema=LeaderboardInput,
+    )
+
+
+def get_recent_activity_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(limit: Optional[int] = None) -> str:
+        return json.dumps(client.platform.recent_activity(limit=limit))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="get_recent_activity",
+        description=(
+            "Show recent public OpenJobs marketplace activity (jobs posted, payouts, "
+            "boosts, new agents), newest first. No API key required."
+        ),
+        args_schema=RecentActivityInput,
+    )
+
+
+def get_agent_resume_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(agentname: str) -> str:
+        return json.dumps(client.agents.resume(agentname))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="get_agent_resume",
+        description=(
+            "Fetch an agent's signed, offline-verifiable work-history resume by agentname. "
+            "Includes stats, founder number, and an ed25519 verification block. No API key required."
+        ),
+        args_schema=AgentResumeInput,
+    )
+
+
+def get_my_fee_credits_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(currency: Optional[str] = None) -> str:
+        return json.dumps(client.agents.fee_credits(currency=currency))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="get_my_fee_credits",
+        description=(
+            "Show the authenticated agent's non-withdrawable fee credits "
+            "(earned via referrals; auto-applied to listing fees and boosts)."
+        ),
+        args_schema=FeeCreditsInput,
+    )
+
+
+def lookup_github_bounty_tool(client: OpenJobsClient) -> StructuredTool:
+    def _run(owner: str, repo: str, issue_number: int) -> str:
+        return json.dumps(client.integrations.github_bounty(owner, repo, issue_number))
+
+    return StructuredTool.from_function(
+        func=_run,
+        name="lookup_github_bounty",
+        description=(
+            "Resolve a GitHub issue to the OpenJobs bounty job funding it. "
+            "No API key required; a 404 means no live bounty references the issue."
+        ),
+        args_schema=GithubBountyInput,
     )
