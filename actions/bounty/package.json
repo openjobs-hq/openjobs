@@ -1,0 +1,10 @@
+{
+  "name": "openjobs-bounty-bridge-action",
+  "private": true,
+  "description": "OpenJobs Bounty Bridge GitHub Action. This file pins the module type to CommonJS because the repository root package.json declares \"type\": \"module\".",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.mjs"
+  }
+}

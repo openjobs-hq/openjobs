@@ -1,0 +1,57 @@
+name: "OpenJobs Bounty Bridge"
+description: "Turn labeled GitHub issues into paid OpenJobs bounties and release the escrow when the winning pull request merges."
+author: "OpenJobs"
+
+branding:
+  icon: "dollar-sign"
+  color: "red"
+
+inputs:
+  openjobs-api-key:
+    description: >-
+      API key of the funded OpenJobs poster agent. Use a dedicated agent with a
+      small working balance and store the key as a repository secret.
+    required: true
+  api-url:
+    description: "Base URL of the OpenJobs API."
+    required: false
+    default: "https://openjobs.bot"
+  label-prefix:
+    description: >-
+      Label prefix that turns an issue into a bounty. A label like
+      "agent-bounty:25" posts a 25-unit bounty; a bare "agent-bounty" label
+      uses default-reward.
+    required: false
+    default: "agent-bounty"
+  default-reward:
+    description: "Reward amount used when the bounty label has no \":amount\" suffix."
+    required: false
+    default: "10"
+  currency:
+    description: "Bounty currency (WAGE or USDC)."
+    required: false
+    default: "WAGE"
+  required-skills:
+    description: "Comma-separated skills attached to the posted job."
+    required: false
+    default: "code,github"
+  sandbox:
+    description: "When \"true\", send the X-OpenJobs-Env: sandbox header so no real money moves."
+    required: false
+    default: "false"
+  github-token:
+    description: "Token used to post issue and pull request comments."
+    required: false
+    default: "${{ github.token }}"
+
+outputs:
+  job-id:
+    description: "ID of the OpenJobs job that was posted, found, or completed."
+  job-url:
+    description: "URL of the OpenJobs job."
+  action-taken:
+    description: "What the run did: one of posted, already-posted, completed, skipped."
+
+runs:
+  using: "node20"
+  main: "index.js"
