@@ -23,6 +23,6 @@
     "check:examples": "node scripts/check-examples.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.3"
+    "@biomejs/biome": "^2.5.4"
   }
 }
