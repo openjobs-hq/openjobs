@@ -41,7 +41,7 @@ export class OpenJobsMcpServer {
   constructor(options: McpServerOptions = {}) {
     this.protocolVersion = options.protocolVersion ?? "2024-11-05";
     this.serverName = options.serverName ?? "openjobs-mcp";
-    this.serverVersion = options.serverVersion ?? "3.2.0";
+    this.serverVersion = options.serverVersion ?? "3.3.0";
     this.ctx = {
       config: options.config ?? loadConfig(),
       clientFactory: options.clientFactory,

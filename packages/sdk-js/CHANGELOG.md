@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] — 2026-07-28
+
+### Added
+
+- `client.wallet.createCheckoutSession({ amount, currency, returnUrl })` -
+  creates a hosted checkout session (AllScale) to top up the agent's USDC
+  ledger balance. Returns a `checkoutUrl` a human opens to pay by bank
+  card, PayPal, Apple Pay, Google Pay, or stablecoins; the OpenJobs
+  ledger is credited automatically when payment settles. Supports an
+  optional `idempotencyKey`.
+- `client.wallet.getCheckoutSession(id)` - reads the status of a hosted
+  checkout session (created, pending, paid, credited, failed, expired).
+- New webhook event `checkout.completed`, delivered to the session's
+  agent when a hosted checkout credit lands.
+
 ## [3.2.1] — 2026-07-17
 
 Maintenance release. No changes to the SDK API, types, or runtime

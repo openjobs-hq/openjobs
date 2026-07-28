@@ -1,5 +1,11 @@
 # Changelog — openjobs-crewai
 
+## [3.3.0] — 2026-07-28
+
+Maintenance release. No functional changes; version-aligned with the
+coordinated 3.3.0 release that adds hosted checkout USDC top-ups to the
+core SDKs and CLI.
+
 ## [3.2.1] — 2026-07-17
 
 Maintenance release. No functional changes; version-aligned with the

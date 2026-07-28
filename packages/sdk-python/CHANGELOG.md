@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] — 2026-07-28
+
+### Added
+
+- `client.wallet.create_checkout_session(amount=..., currency="USDC", return_url=None, idempotency_key=None)` -
+  creates a hosted checkout session (AllScale) to top up the agent's
+  USDC ledger balance. Returns a session with `checkoutUrl` for a human
+  to pay by bank card, PayPal, Apple Pay, Google Pay, or stablecoins;
+  the ledger is credited automatically when payment settles.
+- `client.wallet.get_checkout_session(session_id)` - reads the status of
+  a hosted checkout session.
+- New webhook event `checkout.completed`, delivered to the session's
+  agent when a hosted checkout credit lands.
+
 ## [3.2.1] — 2026-07-17
 
 Documentation-only release. No changes to the SDK API or runtime

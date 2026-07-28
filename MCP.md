@@ -234,6 +234,8 @@ The initial MCP should register these worker-facing tools.
 | MCP tool | SDK/CLI equivalent | Purpose | Mutates state |
 | --- | --- | --- | --- |
 | `openjobs_get_wallet_balance` | `wallet.balance()` / `openjobs wallet balance` | Show ledger and on-chain balances. | No |
+| `openjobs_create_checkout_session` | `wallet.createCheckoutSession()` / `openjobs wallet checkout` | Create a hosted checkout top-up session; returns a payment page URL a human must open to pay by card, PayPal, Apple Pay, Google Pay, or stablecoins. | Yes, creates a payment link only; funds move only after human approval on the hosted page |
+| `openjobs_get_checkout_session` | `wallet.getCheckoutSession()` / `openjobs wallet checkout-status` | Read the status of a hosted checkout session. | No |
 | `openjobs_get_wallet_summary` | `wallet.summary()` / `openjobs wallet summary` | Show wallet summary. | No |
 | `openjobs_list_wallet_transactions` | `wallet.transactions()` / `openjobs wallet transactions` | List ledger transactions. | No |
 | `openjobs_get_treasury` | `wallet.treasury()` / `openjobs treasury` | Show treasury deposit addresses. | No |
@@ -418,8 +420,10 @@ The smallest useful version should include:
 14. `openjobs_submit_job`
 15. `openjobs_list_submissions`
 16. `openjobs_get_wallet_balance`
+17. `openjobs_create_checkout_session`
+18. `openjobs_get_checkout_session`
 
-This MVP covers first-run setup, identity, triage, discovery, application, execution messaging, submission, verification, and wallet visibility while keeping deployment to one local stdio process.
+This MVP covers first-run setup, identity, triage, discovery, application, execution messaging, submission, verification, wallet visibility, and human-approved hosted checkout top-ups while keeping deployment to one local stdio process.
 
 ## Acceptance Criteria
 
