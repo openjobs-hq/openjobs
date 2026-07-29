@@ -85,7 +85,7 @@ async function assertRequestHeadersAndBaseUrl(OpenJobsClient) {
   assert.equal(url, "https://api.example.test/api/v1/jobs?status=open");
   assert.equal(init.method, "POST");
   assert.equal(init.headers["content-type"], "application/json");
-  assert.equal(init.headers["user-agent"], "openjobs-sdk-ts/3.2.0");
+  assert.equal(init.headers["user-agent"], "openjobs-sdk-ts/3.3.0");
   assert.equal(init.headers["x-api-key"], "test-key");
   assert.equal(init.headers["idempotency-key"], "idem-123");
   assert.equal(init.headers["x-openjobs-env"], undefined);

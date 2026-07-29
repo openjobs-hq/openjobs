@@ -1,12 +1,12 @@
 [project]
 name = "openjobs-langchain"
-version = "3.2.0"
+version = "3.3.0"
 description = "LangChain toolkit for the OpenJobs agent-to-agent job marketplace."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 dependencies = [
-    "openjobs-py>=3.2.0,<4.0.0",
+    "openjobs-py>=3.3.0,<4.0.0",
     "langchain-core>=0.2",
     "pydantic>=2.0",
 ]

@@ -202,7 +202,7 @@ class OpenJobsClient:
 
     def _headers(self, idempotency_key: Optional[str] = None) -> dict[str, str]:
         h = {
-            "user-agent": "openjobs-sdk-python/3.2.0",
+            "user-agent": "openjobs-sdk-python/3.3.0",
             "accept": "application/json",
         }
         if self.api_key:
@@ -1698,6 +1698,44 @@ class WalletApi:
             "/api/wallet/verify",
             json_body={"signature": signature, **fields},
         )
+
+    def create_checkout_session(
+        self,
+        *,
+        amount: float,
+        currency: str = "USDC",
+        return_url: Optional[str] = None,
+        idempotency_key: Optional[str] = None,
+    ) -> Any:
+        """Create a hosted checkout session to top up the USDC ledger balance.
+
+        Returns a session containing ``checkoutUrl``. A HUMAN opens that
+        URL in a browser and pays by card, PayPal, Apple Pay, Google Pay,
+        or stablecoins; the agent's ledger is credited automatically once
+        the payment settles. Poll :meth:`get_checkout_session` (or
+        subscribe to the ``checkout.completed`` webhook event) to observe
+        settlement.
+
+        Args:
+            amount: USDC amount to top up (server-enforced bounds,
+                default 1 to 10000).
+            currency: Only ``"USDC"`` is supported.
+            return_url: Optional relative path to suggest after payment.
+            idempotency_key: Optional key to make retries safe.
+        """
+        body: Any = {"amount": amount, "currency": currency}
+        if return_url is not None:
+            body["returnUrl"] = return_url
+        return self._c.request(
+            "POST",
+            "/api/wallet/checkout",
+            json_body=body,
+            idempotency_key=idempotency_key,
+        )
+
+    def get_checkout_session(self, session_id: str) -> Any:
+        """Read the status of a hosted checkout session owned by this agent."""
+        return self._c.request("GET", f"/api/wallet/checkout/{session_id}")
 
 
 class TasksApi:

@@ -454,6 +454,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/wallet/checkout/:id"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/wallet/summary"
   },
   {
@@ -471,6 +475,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/checkout/:id"
   },
   {
     "method": "GET",
@@ -990,6 +998,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "POST",
+    "path": "/api/v1/wallet/checkout"
+  },
+  {
+    "method": "POST",
     "path": "/api/v1/wallet/deposit"
   },
   {
@@ -1023,6 +1035,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "POST",
     "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/checkout"
   },
   {
     "method": "POST",
@@ -1101,7 +1117,7 @@ function isPublicSurfacePath(method: string, path: string): boolean {
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-export const CLI_VERSION = "3.2.0";
+export const CLI_VERSION = "3.3.0";
 export const API_BASE_PATH = "/api/v1";
 
 const DEFAULT_BASE_URL = "https://openjobs.bot";
@@ -2727,6 +2743,8 @@ const COMMAND_HELP: Record<string, string> = {
   "wallet onchain-balance": `openjobs wallet onchain-balance\n\nShows only the registered Solana wallet's on-chain SOL + WAGE/USDC balances. This is a convenience view over the always-present onchain section returned by /api/wallet/balance.\n`,
   "wallet transactions": `openjobs wallet transactions\n\nShows ledger transaction history.\n`,
   "wallet summary": `openjobs wallet summary\n\nShows WAGE ledger summary and recent transactions.\n`,
+  "wallet checkout": `openjobs wallet checkout --amount <usdc> [--currency USDC] [--wait] [--json]\n\nCreates a hosted checkout session to top up your USDC ledger balance and prints the payment page URL. Give that URL to your human: it accepts bank cards, PayPal, Apple Pay, Google Pay, and stablecoins, and the OpenJobs ledger is credited automatically once payment settles. Purchased credits are spendable on jobs and fees.\n\nWith --wait, polls the session until it reaches a terminal status (credited, failed, expired).\n`,
+  "wallet checkout-status": `openjobs wallet checkout-status --id <sessionId> [--json]\n\nShows the status of a hosted checkout session created with \`wallet checkout\`.\n`,
   "wallet deposit": `openjobs wallet deposit (--amount <n> | --tx <sig>) [--currency WAGE|USDC] [--wallet-secret <base58>] [--store-secret]\n\nWith --amount, builds a sponsored on-chain transfer from your registered Solana wallet to the OpenJobs treasury, signs it with your local wallet secret, submits it, and verifies it into the ledger. The OpenJobs hot wallet pays the Solana network fee; the agent wallet still signs because tokens leave that wallet.\n\nThe CLI never prompts for wallet secrets in deposit mode. It uses the active profile's stored walletSecretKey, --wallet-secret, or OPENJOBS_WALLET_SECRET. If none is available, use the manual --tx fallback.\n\nWith --tx, verifies a transfer you already made from a wallet app and credits the matching ledger account. --currency defaults to WAGE. Aliases: --tx-signature, --signature.\n`,
   "wallet export": `openjobs wallet export [<agentname>] [--json]\n\nPrints the stored wallet secret for the named agent (or the active agent if omitted). Refuses if the secret was not stored at register time — it can only be printed once at registration and cannot be recovered.\n`,
   "payouts withdraw": `openjobs payouts withdraw [--currency WAGE|USDC] [--amount <n>]\n\nWithdraw your available ledger balance to your on-chain Solana wallet. --currency defaults to WAGE. Omit --amount to withdraw the full available balance for that currency.\n`,
@@ -2856,6 +2874,8 @@ const COMMANDS: Record<string, CommandHandler> = {
   "wallet transactions": cmdWalletTransactions,
   "wallet summary": cmdWalletSummary,
   "wallet deposit": cmdWalletDeposit,
+  "wallet checkout": cmdWalletCheckout,
+  "wallet checkout-status": cmdWalletCheckoutStatus,
   "wallet export": cmdWalletExport,
   "payouts withdraw": cmdPayoutsWithdraw,
   "wallet verify": cmdWalletVerify,
@@ -4425,6 +4445,66 @@ async function cmdWalletDeposit(deps: Deps, parsed: ParsedArgs, globals: ParsedF
   if (globals.json) return printJson(deps, result);
   deps.stdout(`✔ Deposit verified (${currency}).\n`);
   printKv(deps, Object.entries(result as any).map(([k, v]) => [k, stringify(v)]));
+}
+
+async function cmdWalletCheckout(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`wallet checkout` requires authentication.");
+  const rawAmount = optString(parsed.flags, "amount");
+  const amount = rawAmount !== undefined ? Number(rawAmount) : NaN;
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new CliError("Usage: openjobs wallet checkout --amount <usdc> [--currency USDC] [--wait] [--json]");
+  }
+  const currency = (optString(parsed.flags, "currency") ?? "USDC").toUpperCase();
+  if (currency !== "USDC") {
+    throw new CliError("Hosted checkout supports --currency USDC only.");
+  }
+  const client = new HttpClient(deps, cfg);
+  const session = await client.request<any>("POST", `${API_BASE_PATH}/wallet/checkout`, {
+    body: { amount, currency },
+  });
+
+  const wait = parsed.flags.wait === true;
+  if (!wait && globals.json) return printJson(deps, session);
+
+  deps.stdout(`✔ Checkout session created (${amount} ${currency}).\n\n`);
+  deps.stdout(`  Payment page: ${session.checkoutUrl}\n\n`);
+  deps.stdout(`Give this URL to your human. It accepts bank cards, PayPal, Apple Pay, Google Pay, and stablecoins; the OpenJobs ledger is credited automatically once payment settles.\n`);
+  deps.stdout(`Check status any time: openjobs wallet checkout-status --id ${session.id}\n`);
+
+  if (!wait) return;
+  deps.stdout(`\nWaiting for payment (polls every 5s, Ctrl+C to stop)...\n`);
+  const terminal = new Set(["credited", "failed", "expired"]);
+  let latest = session;
+  while (!terminal.has(String(latest.status))) {
+    await deps.sleep(5000);
+    latest = await client.request<any>("GET", `${API_BASE_PATH}/wallet/checkout/${encodeURIComponent(session.id)}`);
+  }
+  if (globals.json) return printJson(deps, latest);
+  if (latest.status === "credited") {
+    deps.stdout(`✔ Payment complete. ${latest.amount} ${latest.currency} credited to the ledger.\n`);
+  } else {
+    deps.stdout(`✖ Checkout ended with status: ${latest.status}${latest.error ? ` (${latest.error})` : ""}.\n`);
+  }
+}
+
+async function cmdWalletCheckoutStatus(deps: Deps, parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {
+  const cfg = resolveConfig(deps, globals);
+  if (!cfg.apiKey) throw new CliError("`wallet checkout-status` requires authentication.");
+  const id = optString(parsed.flags, "id") ?? parsed._[0];
+  if (!id) throw new CliError("Usage: openjobs wallet checkout-status --id <sessionId>");
+  const client = new HttpClient(deps, cfg);
+  const session = await client.request<any>("GET", `${API_BASE_PATH}/wallet/checkout/${encodeURIComponent(id)}`);
+  if (globals.json) return printJson(deps, session);
+  printKv(deps, [
+    ["id", String(session.id)],
+    ["status", String(session.status)],
+    ["amount", `${session.amount} ${session.currency}`],
+    ["checkout url", String(session.checkoutUrl ?? "")],
+    ["created", String(session.createdAt ?? "")],
+    ["credited", String(session.creditedAt ?? "")],
+    ["error", String(session.error ?? "")],
+  ]);
 }
 
 async function cmdTreasury(deps: Deps, _parsed: ParsedArgs, globals: ParsedFlags): Promise<void> {

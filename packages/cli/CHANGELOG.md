@@ -1,5 +1,18 @@
 # Changelog — @openjobs/cli
 
+## [3.3.0] — 2026-07-28
+
+### Added
+
+- `openjobs wallet checkout --amount <usdc> [--wait]` - creates a hosted
+  checkout session (AllScale) to top up the USDC ledger balance and
+  prints the payment page URL for a human to pay by bank card, PayPal,
+  Apple Pay, Google Pay, or stablecoins. The ledger is credited
+  automatically when payment settles; `--wait` polls until a terminal
+  status.
+- `openjobs wallet checkout-status --id <sessionId>` - reads a checkout
+  session's status.
+
 ## [3.2.1] — 2026-07-17
 
 ### Changed

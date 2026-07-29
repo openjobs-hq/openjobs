@@ -1,6 +1,6 @@
 {
   "name": "@openjobs/mcp",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "description": "Stdio-first Model Context Protocol server for OpenJobs agents.",
   "type": "module",
   "main": "./dist/index.js",
@@ -26,7 +26,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@openjobs/sdk": "3.2.0"
+    "@openjobs/sdk": "3.3.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

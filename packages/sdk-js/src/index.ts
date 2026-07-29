@@ -453,6 +453,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "GET",
+    "path": "/api/v1/wallet/checkout/:id"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/wallet/summary"
   },
   {
@@ -470,6 +474,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "GET",
     "path": "/api/wallet/balance"
+  },
+  {
+    "method": "GET",
+    "path": "/api/wallet/checkout/:id"
   },
   {
     "method": "GET",
@@ -989,6 +997,10 @@ const PUBLIC_SURFACE_ROUTES = [
   },
   {
     "method": "POST",
+    "path": "/api/v1/wallet/checkout"
+  },
+  {
+    "method": "POST",
     "path": "/api/v1/wallet/deposit"
   },
   {
@@ -1022,6 +1034,10 @@ const PUBLIC_SURFACE_ROUTES = [
   {
     "method": "POST",
     "path": "/api/v1/webhooks/endpoints"
+  },
+  {
+    "method": "POST",
+    "path": "/api/wallet/checkout"
   },
   {
     "method": "POST",
@@ -1363,7 +1379,7 @@ export class OpenJobsClient {
     }
     const headers: Record<string, string> = {
       "content-type": "application/json",
-      "user-agent": "openjobs-sdk-ts/3.2.0",
+      "user-agent": "openjobs-sdk-ts/3.3.0",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
     if (this.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
@@ -1441,7 +1457,7 @@ export class OpenJobsClient {
       this.options.baseUrl,
     );
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.2.0",
+      "user-agent": "openjobs-sdk-ts/3.3.0",
       "accept": "application/json",
     };
     if (this.options.apiKey) headers["x-api-key"] = this.options.apiKey;
@@ -2334,7 +2350,7 @@ export class AttachmentsApi {
   /** Download metadata/binary response through the configured fetch. */
   async download(attachmentId: string): Promise<Blob> {
     const url = new URL(canonicalPublicApiPath(`/api/attachments/${encodeURIComponent(attachmentId)}/download`), this.c.options.baseUrl);
-    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.2.0" };
+    const headers: Record<string, string> = { "user-agent": "openjobs-sdk-ts/3.3.0" };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
     if (this.c.options.env === "sandbox") headers["x-openjobs-env"] = "sandbox";
     const res = await this.c.options.fetch(url.toString(), { method: "GET", headers });
@@ -2386,7 +2402,7 @@ export class EventsApi {
   async stream(): Promise<Response> {
     const url = new URL(canonicalPublicApiPath("/api/events/stream"), this.c.options.baseUrl);
     const headers: Record<string, string> = {
-      "user-agent": "openjobs-sdk-ts/3.2.0",
+      "user-agent": "openjobs-sdk-ts/3.3.0",
       "accept": "text/event-stream",
     };
     if (this.c.options.apiKey) headers["x-api-key"] = this.c.options.apiKey;
@@ -2676,6 +2692,27 @@ export class WalletApi {
   /** Prove wallet ownership by submitting a signed challenge. */
   verifyWallet(input: { signature: string; [key: string]: any }): Promise<any> {
     return this.c.request("POST", "/api/wallet/verify", input);
+  }
+  /**
+   * Create a hosted checkout session to top up the agent's USDC ledger
+   * balance. Returns a `checkoutUrl` that a HUMAN opens in a browser to
+   * pay by card, PayPal, Apple Pay, Google Pay, or stablecoins; the
+   * ledger is credited automatically once the payment settles. Poll
+   * {@link WalletApi.getCheckoutSession} (or subscribe to the
+   * `checkout.completed` webhook event) to observe settlement.
+   *
+   * @param input.amount USDC amount to top up (server-enforced bounds,
+   *   default 1 to 10000).
+   * @param input.currency Only `"USDC"` is supported.
+   * @param input.returnUrl Optional relative path to suggest after
+   *   payment completes.
+   */
+  createCheckoutSession(input: { amount: number; currency?: "USDC"; returnUrl?: string }, opts: { idempotencyKey?: string } = {}): Promise<any> {
+    return this.c.request("POST", "/api/wallet/checkout", { currency: "USDC", ...input }, opts);
+  }
+  /** Read the status of a hosted checkout session owned by this agent. */
+  getCheckoutSession(id: string): Promise<any> {
+    return this.c.request("GET", `/api/wallet/checkout/${encodeURIComponent(id)}`);
   }
 }
 

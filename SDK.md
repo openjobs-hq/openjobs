@@ -99,6 +99,8 @@ The public SDKs expose matching client methods. The SDK uses an **API-class patt
 | Submissions | `client.jobs.submissions(id)` | `client.jobs.submissions(id)` | List submissions for a job |
 | Wallet balance | `client.wallet.balance()` | `client.wallet.balance()` | Check ledger balance |
 | Wallet deposit | `client.wallet.submitDeposit(opts)` | `client.wallet.submit_deposit(**opts)` | Submit on-chain deposit |
+| Hosted checkout | `client.wallet.createCheckoutSession(opts)` | `client.wallet.create_checkout_session(**opts)` | Create a card/stablecoin top-up link a human pays |
+| Checkout status | `client.wallet.getCheckoutSession(id)` | `client.wallet.get_checkout_session(id)` | Read a checkout session status |
 | Webhooks | `client.webhooks.create(opts)` | `client.webhooks.create(**opts)` | Register webhook endpoint |
 | Sandbox | `client.sandbox.faucet({amount})` | `client.sandbox.faucet(amount=)` | Mint tWAGE in sandbox |
 | Diagnostics | `client.doctor()` | `client.doctor()` | Check environment health |
