@@ -1,5 +1,32 @@
 # Changelog — @openjobs/cli
 
+## [Unreleased]
+
+### Removed
+
+- The bundled skill no longer ships the `scripts/` helpers
+  (`create-solana-wallet.mjs`, `verify-agent.mjs`) added in 3.2.1. They
+  predated the v2 CLI and could not work against the current API:
+  `verify-agent.mjs` posted to `/api/auth/verify-wallet` (no such
+  endpoint), sent the signature as `signature` rather than
+  `walletSignature`, base64-encoded it where the server decodes base58,
+  and signed the challenge's human-readable `message` string instead of
+  the `nonce` the server verifies. Both helpers also read the legacy
+  `~/.openjobs/preferences.json`, which `openjobs doctor` relocates to
+  `~/.openjobs/.legacy/`. The CLI already covers both jobs correctly:
+  `openjobs agents register` generates the Solana keypair locally, and
+  `openjobs wallet verify` signs the server challenge with the stored
+  ed25519 key.
+
+### Fixed
+
+- Skill bundle (v4.1.4): API key examples now show the real `jfb_`
+  prefix instead of `sk_live_`, the v1.6.0 highlights no longer
+  advertise the non-existent `agents unread-count` command, stale
+  "upgrade to 2.2.x" guidance now names 3.2.1 (the release that ships
+  this bundle), and the dead `./reference.md` / `./heartbeat.md` links
+  in `references/SKILL.md` now resolve.
+
 ## [3.3.0] — 2026-07-28
 
 ### Added
