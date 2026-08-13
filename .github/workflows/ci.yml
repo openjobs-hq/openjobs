@@ -38,6 +38,9 @@ jobs:
       - name: Check package version consistency
         run: npm run check:versions
 
+      - name: Check Markdown links
+        run: npm run check:markdown-links
+
       - name: Run example smoke checks
         run: npm run check:examples
 
