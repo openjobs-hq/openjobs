@@ -30,10 +30,10 @@
     "zod": ">=3"
   },
   "devDependencies": {
-    "@langchain/core": "^1.2.2",
+    "@langchain/core": "^1.2.10",
     "@openjobs/sdk": "file:../sdk-js",
     "typescript": "^7.0.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.2"
   },
   "homepage": "https://openjobs.bot/sdks",
   "repository": {
